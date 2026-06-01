@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block titulo %}Gestión de Menú — KioskoEMI{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#f8fafc] flex flex-col lg:flex-row">
+  {% include 'dashboard/sidebar.html' %} <!-- Sugerencia: Mueve el sidebar a un include -->
+
+  <main class="flex-1 p-6 sm:p-8 lg:p-10 space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-5">
+      <div>
+        <h1 class="text-2xl font-black font-display text-[#0f2042]">Gestión del Menú</h1>
+        <p class="text-xs text-gray-400 mt-0.5">Control de productos y carga de inventario inicial.</p>
+      </div>
+      <button onclick="document.getElementById('modal-producto').classList.remove('hidden')" class="bg-emi-gold hover:bg-emi-goldHover text-emi-950 font-bold text-xs px-5 py-3 rounded-xl transition-all shadow-lg shadow-emi-gold/20">
+        <i class="fa-solid fa-plus mr-1"></i> Nuevo Producto
+      </button>
+    </div>
+
+    <!-- Tabla de Productos -->
+    <div class="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-gray-50 border-b border-gray-100 text-gray-400 font-bold uppercase tracking-wider text-[10px]">
+          <tr>
+            <th class="p-4 pl-6">Producto</th>
+            <th class="p-4">Categoría</th>
+            <th class="p-4">Precio</th>
+            <th class="p-4 text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          {% for prod in productos %}
+          <tr class="hover:bg-gray-50/50 transition-colors">
+            <td class="p-4 pl-6 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden border border-gray-200">
+                {% if prod.imagen %}<img src="{{ prod.imagen.url }}" class="w-full h-full object-cover">{% else %}<div class="w-full h-full flex items-center justify-center">🍔</div>{% endif %}
+              </div>
+              <span class="font-bold text-gray-900">{{ prod.nombre }}</span>
+            </td>
+            <td class="p-4 text-gray-500 font-medium">{{ prod.categoria.nombre }}</td>
+            <td class="p-4 font-black text-emi-900 text-sm">Bs. {{ prod.precio_base|floatformat:2 }}</td>
+            <td class="p-4 text-center space-x-2">
+              <a href="{% url 'dashboard:editar_producto' prod.id %}" class="text-emi-600 hover:bg-emi-50 p-2 rounded-lg transition-colors"><i class="fa-solid fa-pen"></i></a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL PARA NUEVO PRODUCTO (Funcional con tu ProductoForm) -->
+<div id="modal-producto" class="fixed inset-0 z-[100] hidden bg-emi-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-emi-900 text-white">
+      <h3 class="font-bold font-display">Añadir Nuevo Producto</h3>
+      <button onclick="document.getElementById('modal-producto').classList.add('hidden')" class="text-2xl">&times;</button>
+    </div>
+    <form method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Stock Inicial</label>
+        <input type="number" name="stock_inicial" value="0" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm">
+      </div>
+      <button type="submit" class="w-full bg-emi-600 text-white font-bold py-3 rounded-xl shadow-lg">Guardar Producto</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

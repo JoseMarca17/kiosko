@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="min-h-screen bg-[#f8fafc] flex flex-col lg:flex-row">
+  {% include 'dashboard/sidebar.html' %}
+
+  <main class="flex-1 p-6 sm:p-8 lg:p-10 space-y-6">
+    <div class="border-b border-gray-100 pb-5">
+      <h1 class="text-2xl font-black font-display text-[#0f2042]">Control de Existencias</h1>
+      <p class="text-xs text-gray-400 mt-0.5 font-medium">Gestión de stock actual y umbrales de alerta.</p>
+    </div>
+
+    <div class="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-gray-50 border-b border-gray-100 text-gray-400 font-bold uppercase tracking-[0.15em] text-[9px]">
+          <tr>
+            <th class="p-4 pl-6">Producto</th>
+            <th class="p-4">Stock Actual</th>
+            <th class="p-4">Mínimo Requerido</th>
+            <th class="p-4 text-center">Ajuste Rápido</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          {% for item in inventario %}
+          <tr class="{% if item.stock_actual <= item.stock_minimo %}bg-red-50/30{% endif %}">
+            <td class="p-4 pl-6">
+              <p class="font-bold text-gray-900">{{ item.producto.nombre }}</p>
+              <p class="text-[10px] text-gray-400 uppercase">{{ item.producto.categoria.nombre }}</p>
+            </td>
+            <td class="p-4">
+              <span id="stock-val-{{ item.producto_id }}" class="text-sm font-black {% if item.stock_actual <= item.stock_minimo %}text-red-600{% else %}text-emi-600{% endif %}">
+                {{ item.stock_actual }}
+              </span> uds.
+            </td>
+            <td class="p-4 text-gray-400 font-bold">{{ item.stock_minimo }} uds.</td>
+            <td class="p-4 text-center">
+              <div class="flex items-center justify-center gap-2">
+                <button onclick="actualizarStock({{ item.producto_id }}, -1)" class="w-8 h-8 rounded-lg bg-gray-100 hover:bg-red-100 hover:text-red-600 transition-colors border border-gray-200">-</button>
+                <button onclick="actualizarStock({{ item.producto_id }}, 1)" class="w-8 h-8 rounded-lg bg-gray-100 hover:bg-emerald-100 hover:text-emerald-600 transition-colors border border-gray-200">+</button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script>
+function actualizarStock(prodId, cambio) {
+    const el = document.getElementById(`stock-val-${prodId}`);
+    let nuevoVal = parseInt(el.innerText) + cambio;
+    if (nuevoVal < 0) nuevoVal = 0;
+
+    fetch("{% url 'dashboard:inventario' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: `producto_id=${prodId}&stock=${nuevoVal}`
+    })
+    .then(r => r.json())
+    .then(data => { if(data.ok) el.innerText = nuevoVal; });
+}
+</script>
+{% endblock %}

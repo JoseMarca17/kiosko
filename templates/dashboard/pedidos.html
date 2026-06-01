@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block titulo %}Gestión de Pedidos — KioskoEMI{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#f8fafc] flex flex-col lg:flex-row">
+  
+  <!-- Sidebar dinámico con info de usuario -->
+  {% include 'dashboard/sidebar.html' %}
+
+  <main class="flex-1 p-6 sm:p-8 lg:p-10 space-y-8">
+    
+    <!-- Encabezado con Filtros Reales -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-gray-100 pb-6">
+      <div>
+        <h1 class="text-2xl font-black font-display text-[#0f2042] tracking-tight">Monitor de Pedidos</h1>
+        <p class="text-xs text-gray-400 mt-1 font-medium">Control operativo de la cola de producción y despacho express.</p>
+      </div>
+
+      <!-- Formulario de Filtrado por Estado -->
+      <form method="GET" class="flex items-center gap-2">
+        <select name="estado" onchange="this.form.submit()" 
+                class="bg-white border border-gray-200 text-gray-700 text-[11px] font-bold py-2.5 px-4 rounded-xl focus:outline-none focus:border-emi-600 shadow-sm transition-all uppercase tracking-wider">
+          <option value="">🚀 Todos los estados</option>
+          {% for est in estados %}
+            <option value="{{ est.nombre }}" {% if estado_filtro == est.nombre %}selected{% endif %}>
+              {{ est.nombre|upper }}
+            </option>
+          {% endfor %}
+        </select>
+        {% if estado_filtro %}
+          <a href="{% url 'dashboard:pedidos' %}" class="p-2.5 text-gray-400 hover:text-red-500 bg-white border border-gray-200 rounded-xl transition-colors">
+            <i class="fa-solid fa-circle-xmark"></i>
+          </a>
+        {% endif %}
+      </form>
+    </div>
+
+    <!-- Lista de Pedidos (Bucle de la vista_pedidos_admin) -->
+    <div class="grid grid-cols-1 gap-4">
+      {% for pedido in pedidos %}
+      <div class="bg-white border border-gray-100 rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5 transition-all hover:shadow-md border-l-4 
+        {% if pedido.estado.nombre == 'pendiente' %} border-l-amber-400 
+        {% elif pedido.estado.nombre == 'preparando' %} border-l-blue-500 
+        {% elif pedido.estado.nombre == 'listo' %} border-l-emi-gold 
+        {% elif pedido.estado.nombre == 'entregado' %} border-l-emerald-500 
+        {% else %} border-l-gray-200 {% endif %}">
+        
+        <div class="space-y-2">
+          <div class="flex items-center gap-3">
+            <span class="font-black text-sm text-emi-900 tracking-tight">ORD-{{ pedido.id }}</span>
+            <span class="px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border
+              {% if pedido.estado.nombre == 'entregado' %} bg-emerald-50 text-emerald-700 border-emerald-100
+              {% elif pedido.estado.nombre == 'preparando' %} bg-blue-50 text-blue-700 border-blue-100
+              {% else %} bg-amber-50 text-amber-700 border-amber-100 {% endif %}">
+              {{ pedido.estado.nombre }}
+            </span>
+          </div>
+          
+          <div class="space-y-1">
+            <p class="text-xs font-bold text-gray-700">
+              <i class="fa-solid fa-user text-[10px] text-gray-300 mr-1"></i> {{ pedido.usuario.get_full_name|default:pedido.usuario.username }}
+            </p>
+            <!-- Detalle de productos anidado -->
+            <div class="flex flex-wrap gap-2">
+              {% for item in pedido.detalles.all %}
+                <span class="text-[10px] bg-gray-50 text-gray-500 px-2 py-0.5 rounded-md border border-gray-100">
+                  <strong class="text-emi-900">{{ item.cantidad }}x</strong> {{ item.producto.nombre }}
+                </span>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between md:justify-end gap-6 border-t md:border-t-0 pt-4 md:pt-0 border-gray-50">
+          <div class="text-right">
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Pedido</p>
+            <p class="text-base font-black text-emi-900">Bs. {{ pedido.total|floatformat:2 }}</p>
+          </div>
+
+          <!-- Acciones Dinámicas de Estado -->
+          <div class="flex gap-2">
+            {% if pedido.estado.nombre == 'pagado' %}
+              <button onclick="gestionarPedido({{ pedido.id }}, 'preparando')" class="bg-emi-600 hover:bg-emi-800 text-white font-bold px-4 py-2 rounded-xl text-[10px] transition-all shadow-sm">
+                👨‍🍳 PREPARAR
+              </button>
+            {% elif pedido.estado.nombre == 'preparando' %}
+              <button onclick="gestionarPedido({{ pedido.id }}, 'listo')" class="bg-emi-gold hover:bg-emi-goldHover text-emi-950 font-bold px-4 py-2 rounded-xl text-[10px] transition-all shadow-sm">
+                📦 LISTO
+              </button>
+            {% elif pedido.estado.nombre == 'listo' %}
+              <button onclick="gestionarPedido({{ pedido.id }}, 'entregado')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-[10px] transition-all shadow-sm text-center">
+                ✅ ENTREGAR
+              </button>
+            {% endif %}
+            <a href="#" class="p-2 text-gray-400 hover:text-emi-600 transition-colors border border-gray-100 rounded-xl" title="Ver detalle">
+              <i class="fa-solid fa-eye"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="text-center py-20 bg-white border border-gray-100 rounded-[2.5rem] shadow-sm">
+        <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fa-solid fa-inbox text-2xl text-gray-200"></i>
+        </div>
+        <h3 class="font-display font-bold text-[#0f2042]">Sin órdenes activas</h3>
+        <p class="text-xs text-gray-400 mt-1">No hay pedidos pendientes de procesamiento con el filtro actual.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </main>
+</div>
+{% endblock %}
+
+{% block js_extra %}
+<script>
+// Función para actualizar estados vía AJAX sin recargar (opcional, o usa redirección)
+function gestionarPedido(pedidoId, nuevoEstado) {
+    if(confirm(`¿Deseas cambiar el pedido a estado: ${nuevoEstado}?`)) {
+        // Aquí podrías disparar un fetch() a una vista dedicada de cambio de estado
+        // o simplemente recargar enviando el dato.
+        console.log(`Cambiando pedido ${pedidoId} a ${nuevoEstado}`);
+    }
+}
+</script>
+{% endblock %}

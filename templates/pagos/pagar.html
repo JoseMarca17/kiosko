@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block titulo %}Pagar pedido {{ pedido.codigo_pedido }} — KioskoEMI{% endblock %}
+
+{% block content %}
+<div class="container-sm page-content">
+
+  <!-- Steps -->
+  <div class="steps fade-up fade-up-1" style="margin-bottom:2rem;">
+    <div class="step done"><div class="step-num">✓</div><div class="step-label">Revisar</div></div>
+    <div class="step-line done"></div>
+    <div class="step active"><div class="step-num">2</div><div class="step-label">Pagar</div></div>
+    <div class="step-line"></div>
+    <div class="step"><div class="step-num">3</div><div class="step-label">Listo</div></div>
+  </div>
+
+  <!-- Código del pedido -->
+  <div style="background:var(--blue-900);border-radius:var(--radius-lg);padding:1.25rem 1.5rem;
+              display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;"
+       class="fade-up fade-up-1">
+    <div>
+      <div style="color:var(--blue-300);font-size:.8rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;">
+        Código de pedido
+      </div>
+      <div style="color:white;font-family:var(--font-display);font-size:1.3rem;font-weight:800;
+                  letter-spacing:.05em;">
+        {{ pedido.codigo_pedido }}
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div style="color:var(--blue-300);font-size:.8rem;">Total a pagar</div>
+      <div style="color:var(--gold-400);font-family:var(--font-display);
+                  font-size:1.8rem;font-weight:800;">
+        Bs. {{ pedido.total|floatformat:2 }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Instrucciones + QR -->
+  <div class="card fade-up fade-up-2" style="margin-bottom:1.5rem;">
+    <div style="padding:1.5rem;text-align:center;border-bottom:1px solid var(--color-border);">
+      <h3 style="font-family:var(--font-display);font-size:1.1rem;color:var(--blue-900);margin-bottom:.5rem;">
+        📱 Paga con tu QR
+      </h3>
+      <p style="color:var(--gray-600);font-size:.9rem;">
+        Escanea el código QR con tu app bancaria o Tigo Money
+      </p>
+    </div>
+
+    {% if qr_activo %}
+    <div style="padding:2rem;text-align:center;">
+      <div style="display:inline-block;padding:1rem;background:white;
+                  border-radius:var(--radius-lg);border:2px solid var(--color-border);
+                  box-shadow:var(--shadow-md);">
+        <img src="{{ qr_activo.imagen_qr.url }}"
+             alt="QR de pago"
+             style="width:200px;height:200px;object-fit:contain;">
+      </div>
+      <p style="margin-top:1rem;font-weight:600;color:var(--blue-800);font-family:var(--font-display);">
+        {{ qr_activo.banco }}
+      </p>
+      <p style="color:var(--gray-600);font-size:.875rem;">{{ qr_activo.titular }}</p>
+      <div style="background:var(--gold-100);border:1px solid var(--gold-300);
+                  border-radius:var(--radius-md);padding:.75rem 1rem;
+                  display:inline-block;margin-top:.75rem;font-size:.875rem;color:#92400e;">
+        ⚠️ Asegúrate de pagar exactamente <strong>Bs. {{ pedido.total|floatformat:2 }}</strong>
+      </div>
+    </div>
+    {% else %}
+    <div style="padding:2rem;text-align:center;color:var(--color-text-muted);">
+      No hay QR disponible en este momento. Contacta al kiosko.
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Subir comprobante -->
+  <div class="card fade-up fade-up-3">
+    <div style="padding:1.25rem 1.5rem;border-bottom:1px solid var(--color-border);">
+      <h3 style="font-family:var(--font-display);font-size:1rem;color:var(--blue-900);">
+        📎 Sube tu comprobante de pago
+      </h3>
+    </div>
+    <div style="padding:1.5rem;">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="upload-zone" id="upload-zone">
+          <div class="upload-icon">📸</div>
+          <p><strong>Haz clic</strong> o arrastra tu screenshot aquí</p>
+          <p style="font-size:.8rem;margin-top:.35rem;color:var(--color-text-muted);">
+            JPG, PNG o WEBP — máx. 5MB
+          </p>
+          <input type="file" name="comprobante" id="comprobante-input"
+                 accept="image/*" style="display:none;" required>
+        </div>
+
+        <img id="comprobante-preview"
+             style="display:none;width:100%;max-height:280px;object-fit:contain;
+                    border-radius:var(--radius-md);margin-top:1rem;
+                    border:2px solid var(--color-border);cursor:pointer;"
+             onclick="resetPreview()">
+
+        <p style="font-size:.8rem;color:var(--color-text-muted);margin-top:.75rem;">
+          💡 El kiosko verificará tu comprobante y cambiará el estado del pedido
+        </p>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:1.25rem;">
+          Enviar comprobante →
+        </button>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block js_extra %}
+<script>
+function resetPreview() {
+  document.getElementById('comprobante-preview').style.display = 'none';
+  document.getElementById('upload-zone').style.display = 'block';
+}
+</script>
+{% endblock %}

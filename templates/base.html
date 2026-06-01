@@ -1,0 +1,181 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-[#f8fafc]">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block titulo %}Kiosko Universitario{% endblock %}</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            emi: {
+              950: '#0a1628',
+              900: '#0f2042',
+              800: '#1a3460',
+              600: '#2355a0',
+              300: '#7eb8f7',
+              gold: '#f5a623',
+              goldHover: '#f7bc52',
+            }
+          },
+          fontFamily: {
+            display: ['Sora', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap');
+    body { font-family: 'DM Sans', sans-serif; }
+    .sidebar-transition { transition: transform 0.3s ease-in-out; }
+  </style>
+  {% block css_extra %}{% endblock %}
+</head>
+<body class="flex flex-col min-h-full font-body text-[#1e293b]">
+
+<nav class="bg-emi-900 border-b-2 border-emi-gold sticky top-0 z-40 shadow-md h-16">
+  <div class="max-w-7xl mx-auto h-full px-4 flex justify-between items-center">
+    
+    <div class="flex items-center gap-6">
+      <a href="/" class="font-display font-bold text-xl text-white tracking-tight flex items-center gap-2">
+        🏪 Kiosko<span class="text-emi-gold">EMI</span>
+      </a>
+      <div class="hidden md:flex items-center space-x-1">
+        <a href="/" class="text-emi-300 hover:text-white hover:bg-white/5 px-3 py-2 rounded-md text-sm font-medium transition-colors">Inicio</a>
+        <a href="/catalogo/" class="text-emi-300 hover:text-white hover:bg-white/5 px-3 py-2 rounded-md text-sm font-medium transition-colors">Productos</a>
+        <a href="/nosotros/" class="text-emi-300 hover:text-white hover:bg-white/5 px-3 py-2 rounded-md text-sm font-medium transition-colors">Nosotros</a>
+      </div>
+    </div>
+
+    <div class="flex items-center space-x-4">
+      {% if user.is_authenticated %}
+        <div class="hidden sm:flex items-center space-x-2 border-r border-emi-800 pr-2">
+          {% if user.es_admin or user.es_staff_kiosko %}
+            <a href="/dashboard/" class="text-emi-gold hover:text-white text-xs font-semibold uppercase tracking-wider bg-emi-800 px-2.5 py-1 rounded border border-emi-600 transition-all">
+              ⚡ Dashboard
+            </a>
+          {% endif %}
+        </div>
+
+        <button onclick="Carrito.abrirSidebar()" class="relative p-2 text-emi-300 hover:text-white transition-colors">
+          <i class="fa-solid fa-cart-shopping text-lg"></i>
+          <span id="cart-count" class="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-4 px-1 text-[10px] font-bold bg-emi-gold text-emi-950 rounded-full shadow-sm">0</span>
+        </button>
+
+        <div class="flex items-center gap-3 pl-2 border-l border-emi-800/50">
+          <span class="hidden lg:inline text-xs text-emi-300 font-medium italic">{{ user.username }}</span>
+          <a href="/usuarios/logout/" class="text-xs bg-red-950/40 hover:bg-red-600/20 text-red-400 hover:text-red-300 px-3 py-2 rounded-md font-medium transition-all border border-red-900/50">
+            Cerrar sesión
+          </a>
+        </div>
+      {% else %}
+        <a href="/usuarios/login/" class="text-emi-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">Login</a>
+        <a href="/usuarios/registro/" class="bg-emi-gold hover:bg-emi-goldHover text-emi-950 px-5 py-2 rounded-xl text-sm font-bold shadow-md shadow-emi-gold/20 transition-all transform hover:-translate-y-0.5">
+          Registrarse
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+{% if messages %}
+  <div class="max-w-4xl mx-auto w-full px-4 mt-4 space-y-2 relative z-50">
+    {% for msg in messages %}
+      <div class="p-4 rounded-xl flex items-center gap-3 border shadow-sm text-sm
+        {% if msg.tags == 'error' %} bg-red-50 text-red-800 border-red-200
+        {% elif msg.tags == 'warning' %} bg-amber-50 text-amber-800 border-amber-200
+        {% else %} bg-emerald-50 text-emerald-800 border-emerald-200 {% endif %}">
+        <i class="fa-solid {% if msg.tags == 'error' %}fa-circle-xmark{% else %}fa-circle-check{% endif %} text-lg text-opacity-80"></i>
+        <span class="flex-1 font-medium">{{ msg }}</span>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<main class="flex-grow w-full">
+  {% block content %}{% endblock %}
+</main>
+
+{% if user.is_authenticated %}
+<!-- Sidebar Carrito -->
+<div id="cart-overlay" onclick="Carrito.cerrarSidebar()" class="fixed inset-0 bg-emi-950/60 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300"></div>
+<div id="cart-sidebar" class="fixed inset-y-0 right-0 max-w-sm w-full bg-white shadow-2xl z-[60] transform translate-x-full sidebar-transition flex flex-col border-l border-gray-200">
+  <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-emi-900 text-white shadow-sm">
+    <div class="flex items-center gap-3">
+      <i class="fa-solid fa-basket-shopping text-emi-gold text-lg"></i>
+      <h3 class="font-display font-bold text-base tracking-tight">Mi Pedido Actual</h3>
+    </div>
+    <button onclick="Carrito.cerrarSidebar()" class="text-gray-400 hover:text-white text-2xl transition-colors">&times;</button>
+  </div>
+  <div class="bg-emi-50/50 px-5 py-3 border-b border-gray-100 flex justify-between items-center">
+    <span class="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Historial</span>
+    <a href="/pedidos/mis-pedidos/" class="text-emi-600 hover:text-emi-800 text-xs font-bold flex items-center gap-1.5 transition-colors">
+      <i class="fa-solid fa-clock-rotate-left"></i> Ver mis pedidos
+    </a>
+  </div>
+  <div id="cart-items" class="flex-grow overflow-y-auto p-5 space-y-4">
+    <div class="text-center py-20 text-gray-400 opacity-60">
+      <i class="fa-solid fa-box-open text-4xl mb-3 block"></i>
+      <p class="text-sm font-medium">Tu carrito está esperando por comida.</p>
+    </div>
+  </div>
+  <div class="p-6 border-t border-gray-100 bg-gray-50 space-y-4">
+    <div class="flex justify-between items-baseline">
+      <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Total</span>
+      <span id="cart-total" class="text-2xl font-black text-emi-900 font-display">Bs. 0.00</span>
+    </div>
+    <a href="/pedidos/checkout/" class="block w-full text-center bg-emi-gold hover:bg-emi-goldHover text-emi-950 font-bold py-4 rounded-2xl transition-all shadow-lg shadow-emi-gold/20 flex items-center justify-center gap-2">
+      Procesar Compra <i class="fa-solid fa-chevron-right text-[10px]"></i>
+    </a>
+  </div>
+</div>
+{% endif %}
+
+<footer class="bg-emi-950 text-emi-300 border-t border-emi-800 pt-12 pb-8 mt-auto">
+  <div class="max-w-7xl mx-auto px-4 flex flex-col items-center">
+    <div class="font-display font-bold text-2xl text-white mb-4">Kiosko<span class="text-emi-gold">EMI</span></div>
+    <nav class="flex gap-6 mb-8 text-sm font-medium">
+        <a href="/" class="hover:text-white transition-colors">Inicio</a>
+        <a href="/catalogo/" class="hover:text-white transition-colors">Productos</a>
+        <a href="/nosotros/" class="hover:text-white transition-colors">Nosotros</a>
+    </nav>
+    <div class="w-full max-w-xs h-[1px] bg-emi-800 mb-6 opacity-50"></div>
+    <p class="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-bold">© 2026 Escuela Militar de Ingeniería</p>
+  </div>
+</footer>
+
+<script>
+  const Carrito = {
+    abrirSidebar: () => {
+      const sidebar = document.getElementById('cart-sidebar');
+      const overlay = document.getElementById('cart-overlay');
+      if(sidebar && overlay) {
+        sidebar.classList.remove('translate-x-full');
+        overlay.classList.remove('hidden');
+        setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+      }
+    },
+    cerrarSidebar: () => {
+      const sidebar = document.getElementById('cart-sidebar');
+      const overlay = document.getElementById('cart-overlay');
+      if(sidebar && overlay) {
+        sidebar.classList.add('translate-x-full');
+        overlay.classList.add('opacity-0');
+        setTimeout(() => overlay.classList.add('hidden'), 300);
+      }
+    }
+  };
+</script>
+
+<script src="{% static 'js/carrito.js' %}"></script>
+<script src="{% static 'js/pedidos.js' %}"></script>
+{% block js_extra %}{% endblock %}
+</body>
+</html>

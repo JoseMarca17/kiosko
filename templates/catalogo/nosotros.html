@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block titulo %}Nosotros — KioskoEMI{% endblock %}
+
+{% block content %}
+
+<section class="relative bg-gradient-to-b from-[#0a1628] via-[#0f2042] to-[#142647] overflow-hidden min-h-[55vh] flex flex-col justify-between pt-16">
+  <div class="absolute -top-32 -right-32 w-96 h-96 bg-[#f5a623]/10 rounded-full blur-[100px] pointer-events-none"></div>
+  <div class="absolute -bottom-20 left-10 w-80 h-80 bg-[#2355a0]/20 rounded-full blur-[80px] pointer-events-none"></div>
+
+  <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-6 my-auto">
+    <span class="inline-flex items-center gap-1.5 bg-[#f5a623]/10 border border-[#f5a623]/30 text-[#f7bc52] px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase font-display">
+      🚀 Ingeniería de Sistemas
+    </span>
+    <h1 class="text-4xl sm:text-6xl font-black text-white font-display tracking-tight">
+      Sobre Kiosko<span class="text-[#f5a623]">EMI</span>
+    </h1>
+    <p class="text-[#7eb8f7] text-sm sm:text-lg max-w-2xl mx-auto leading-relaxed font-medium">
+      Una solución de software de alto rendimiento diseñada e implementada para modernizar los procesos de interacción, control y transacciones comerciales dentro de nuestro campus.
+    </p>
+  </div>
+
+  <div class="w-full leading-[0] relative z-20 mt-auto">
+    <svg viewBox="0 0 1200 120" preserveAspectRatio="none" class="relative block w-full h-16 fill-[#f8fafc]">
+      <path d="M0,32L120,42.7C240,53,480,75,720,74.7C960,75,1200,53,1320,42.7L1440,32L1440,120L1320,120C1200,120,960,120,720,120C480,120,240,120,120,120L0,120Z"></path>
+    </svg>
+  </div>
+</section>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mb-16">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+    
+    <div class="lg:col-span-7 space-y-6">
+      <div class="inline-block bg-[#2355a0]/10 text-[#2355a0] px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider">
+        Misión del Proyecto
+      </div>
+      <h2 class="text-3xl sm:text-4xl font-black text-[#0f2042] font-display leading-tight">
+        El rincón de buena comida <br>
+        <span class="text-[#2355a0]">en la universidad</span>
+      </h2>
+      <p class="text-gray-500 text-sm sm:text-base leading-relaxed">
+        KioskoEMI automatiza la preventa de productos en los puntos de atención del campus. Mediante la centralización del catálogo y la integración nativa de cobros por códigos QR, el backend reduce sustancialmente el cuello de botella tradicional en las cajas.
+      </p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+        <div class="flex items-start gap-3 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm">
+          <div class="w-10 h-10 bg-blue-50 text-[#2355a0] rounded-xl flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+          <div>
+            <h4 class="font-bold text-sm text-[#0f2042]">Cero Filas</h4>
+            <p class="text-xs text-gray-400 mt-0.5">Ordena desde tu aula y retira directamente cuando el estado cambie a listo.</p>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-3 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm">
+          <div class="w-10 h-10 bg-amber-50 text-[#f5a623] rounded-xl flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <div>
+            <h4 class="font-bold text-sm text-[#0f2042]">Seguridad TI</h4>
+            <p class="text-xs text-gray-400 mt-0.5">Auditoría de usuarios, roles protegidos y almacenamiento cifrado de datos.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lg:col-span-5 relative flex justify-center">
+      <div class="absolute -inset-4 bg-[#f5a623]/10 rounded-[3rem] blur-2xl pointer-events-none"></div>
+      
+      <div class="relative w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white bg-gradient-to-tr from-[#0f2042] to-[#2355a0] h-96">
+        <div class="w-full h-full opacity-85 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=600&q=80');"></div>
+      </div>
+
+      <div class="absolute -bottom-6 -left-4 bg-[#0f2042] border-l-4 border-[#f5a623] p-6 rounded-2xl shadow-xl text-white hidden sm:block">
+        <p class="text-3xl font-black font-display text-[#f5a623]">100%</p>
+        <p class="text-[10px] uppercase font-bold tracking-widest text-[#7eb8f7] mt-0.5">Automatizado</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
+  <div class="bg-gradient-to-r from-[#0f2042] to-[#0a1628] rounded-3xl p-8 sm:p-12 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl border-b-4 border-[#f5a623] relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
+    
+    <div class="space-y-2 text-center md:text-left z-10">
+      <h3 class="font-display font-bold text-xl text-[#f5a623]">¿Sugerencias o Reportes de Vulnerabilidades?</h3>
+      <p class="text-xs text-[#7eb8f7] max-w-xl leading-relaxed">
+        Como estudiantes de Ingeniería de Sistemas, iteramos constantemente la plataforma. Si encuentras un bug o tienes ideas para el módulo de auditoría, contacta al equipo técnico.
+      </p>
+    </div>
+    <a href="mailto:soporte@emi.edu.bo" class="bg-white hover:bg-gray-100 text-[#0a1628] font-black px-6 py-3 rounded-xl text-xs tracking-wide transition-all shadow-md whitespace-nowrap z-10 transform hover:scale-102">
+      <i class="fa-solid fa-envelope mr-1.5"></i> Contactar Soporte
+    </a>
+  </div>
+</div>
+
+{% endblock %}

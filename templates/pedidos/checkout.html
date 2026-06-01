@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block titulo %}Checkout — KioskoEMI{% endblock %}
+
+{% block content %}
+<div class="container-sm page-content">
+
+  <h1 class="section-title fade-up fade-up-1">🛒 Confirmar pedido</h1>
+
+  <!-- Steps -->
+  <div class="steps fade-up fade-up-2">
+    <div class="step active"><div class="step-num">1</div><div class="step-label">Revisar</div></div>
+    <div class="step-line"></div>
+    <div class="step"><div class="step-num">2</div><div class="step-label">Pagar</div></div>
+    <div class="step-line"></div>
+    <div class="step"><div class="step-num">3</div><div class="step-label">Listo</div></div>
+  </div>
+
+  <!-- Resumen del carrito -->
+  <div class="card fade-up fade-up-3" style="margin-bottom:1.5rem;">
+    <div style="padding:1.25rem 1.5rem;border-bottom:1px solid var(--color-border);
+                background:var(--blue-900);border-radius:var(--radius-lg) var(--radius-lg) 0 0;">
+      <h3 style="font-family:var(--font-display);color:white;font-size:1rem;font-weight:600;">
+        📋 Resumen del pedido
+      </h3>
+    </div>
+    <div id="checkout-items" style="padding:1rem 1.5rem;min-height:80px;">
+      <p style="color:var(--color-text-muted);text-align:center;padding:1rem;">
+        Cargando carrito...
+      </p>
+    </div>
+    <div style="padding:1.25rem 1.5rem;border-top:1px solid var(--color-border);background:var(--gray-50);">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-family:var(--font-display);font-weight:600;color:var(--blue-900);">Total a pagar</span>
+        <span id="checkout-total"
+              style="font-family:var(--font-display);font-size:1.6rem;font-weight:800;color:var(--color-accent);">
+          Bs. 0.00
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notas -->
+  <div class="fade-up fade-up-3" style="margin-bottom:1.5rem;">
+    <label class="form-label">Notas del pedido (opcional)</label>
+    <textarea id="notas-pedido" class="form-control" rows="2"
+              placeholder="Alguna indicación especial para el kiosko..."></textarea>
+  </div>
+
+  <!-- Botones -->
+  <div style="display:flex;gap:1rem;" class="fade-up fade-up-3">
+    <a href="{% url 'catalogo:catalogo' %}" class="btn btn-outline" style="flex:1;justify-content:center;">
+      ← Seguir comprando
+    </a>
+    <button onclick="confirmarPedido()" class="btn btn-accent btn-lg" style="flex:2;">
+      Confirmar y pagar →
+    </button>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block js_extra %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const items    = Carrito.items;
+  const container = document.getElementById('checkout-items');
+  const totalEl  = document.getElementById('checkout-total');
+
+  if (!items.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:2rem;color:var(--color-text-muted);">
+        <p>Tu carrito está vacío.</p>
+        <a href="{% url 'catalogo:catalogo' %}" class="btn btn-primary" style="margin-top:1rem;">
+          Ver catálogo
+        </a>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = items.map(item => `
+    <div style="display:flex;align-items:center;gap:1rem;padding:.85rem 0;
+                border-bottom:1px solid var(--color-border);">
+      <img src="${item.imagen || '/static/img/placeholder.jpg'}"
+           style="width:52px;height:52px;border-radius:var(--radius-sm);object-fit:cover;background:var(--gray-100);">
+      <div style="flex:1;">
+        <div style="font-weight:600;color:var(--blue-900);">${item.nombre}</div>
+        <div style="font-size:.8rem;color:var(--color-text-muted);">x${item.cantidad}</div>
+      </div>
+      <div style="font-family:var(--font-display);font-weight:700;color:var(--color-primary);">
+        Bs. ${(item.precio * item.cantidad).toFixed(2)}
+      </div>
+    </div>
+  `).join('');
+
+  totalEl.textContent = `Bs. ${Carrito.total().toFixed(2)}`;
+});
+
+function confirmarPedido() {
+  const items = Carrito.items;
+  if (!items.length) {
+    mostrarToast('Tu carrito está vacío', 'error');
+    return;
+  }
+
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = 'Procesando...';
+
+  fetch("{% url 'pedidos:checkout' %}", {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': '{{ csrf_token }}',
+    },
+    body: JSON.stringify({
+      items: items.map(i => ({ id: i.id, cantidad: i.cantidad, notas: i.notas || '' })),
+      notas: document.getElementById('notas-pedido').value,
+    })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) {
+      Carrito.vaciar();
+      window.location.href = `/pagos/pagar/${data.pedido_id}/`;
+    } else {
+      mostrarToast(data.error || 'Error al crear el pedido');
+      btn.disabled = false;
+      btn.textContent = 'Confirmar y pagar →';
+    }
+  })
+  .catch(() => {
+    mostrarToast('Error de conexión');
+    btn.disabled = false;
+    btn.textContent = 'Confirmar y pagar →';
+  });
+}
+</script>
+{% endblock %}

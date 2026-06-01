@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="min-h-screen bg-[#f8fafc] flex flex-col lg:flex-row">
+  {% include 'dashboard/sidebar.html' %}
+
+  <main class="flex-1 p-6 sm:p-8 lg:p-10 space-y-8">
+    <div class="border-b border-gray-100 pb-5">
+      <h1 class="text-2xl font-black font-display text-[#0f2042]">Auditoría de Ventas</h1>
+      <p class="text-xs text-gray-400 mt-0.5 font-medium">Análisis profundo de rentabilidad y demanda de productos.</p>
+    </div>
+
+    <!-- Gráfica Grande -->
+    <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+      <h3 class="font-bold text-sm text-[#0f2042] mb-6 flex items-center gap-2">
+        <i class="fa-solid fa-chart-line text-emi-600"></i> Evolución de Ingresos (6 Meses)
+      </h3>
+      <div class="h-80 w-full">
+        <canvas id="chart-mensual"></canvas>
+      </div>
+    </div>
+
+    <!-- Tabla de Rendimiento -->
+    <div class="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
+      <div class="p-6 border-b border-gray-50 font-bold text-sm text-[#0f2042]">Ranking de Productos por Ingresos</div>
+      <table class="w-full text-left text-xs">
+        <thead class="bg-gray-50 text-[10px] uppercase font-bold text-gray-400 tracking-widest">
+          <tr>
+            <th class="p-4 pl-6">Producto / Categoría</th>
+            <th class="p-4 text-center">Unidades</th>
+            <th class="p-4 text-right pr-6">Ingresos Totales</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          {% for st in stats_productos %}
+          <tr class="hover:bg-gray-50/50 transition-colors">
+            <td class="p-4 pl-6">
+              <p class="font-bold text-gray-900">{{ st.producto__nombre }}</p>
+              <p class="text-[10px] text-gray-400 italic">{{ st.producto__categoria__nombre }}</p>
+            </td>
+            <td class="p-4 text-center font-medium">{{ st.unidades }} uds.</td>
+            <td class="p-4 text-right pr-6 font-black text-emi-900">Bs. {{ st.ingresos|floatformat:2 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  new Chart(document.getElementById('chart-mensual'), {
+    type: 'line',
+    data: {
+      labels: {{ labels_meses|safe }},
+      datasets: [{
+        label: 'Ventas Mensuales',
+        data: {{ ingresos_mes|safe }},
+        borderColor: '#2355a0',
+        backgroundColor: 'rgba(35, 85, 160, 0.1)',
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  });
+</script>
+{% endblock %}
