@@ -110,7 +110,6 @@ function validarComprobante(idTransaccion, accion) {
   .catch(() => mostrarToast('Error de conexión', 'error'));
 }
 
-// ── Util: obtener cookie CSRF ────────────────────
 function getCookie(name) {
   let valor = null;
   document.cookie.split(';').forEach(c => {

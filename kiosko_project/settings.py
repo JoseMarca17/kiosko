@@ -54,7 +54,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'kiosko_project.wsgi.application'
 
-# Base de datos MySQL
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -68,10 +67,6 @@ DATABASES = {
         },
     }
 }
-
-# Si usaron PyMySQL en lugar de mysqlclient (Windows)
-# Agregar esto ANTES de los imports de Django en manage.py:
-# import pymysql; pymysql.install_as_MySQLdb()
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
