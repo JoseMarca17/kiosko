@@ -160,15 +160,19 @@
   <!-- PRODUCTOS POR CATEGORÍA -->
   {% for item in cats_preview %}
   <section class="mb-16">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-3 border-b border-gray-100">
-      <div>
-        <h2 class="text-xl font-bold font-display text-[#0f2042]">{{ item.categoria.nombre }}</h2>
-        {% if item.categoria.descripcion %}
-          <p class="text-xs text-gray-400 mt-0.5">{{ item.categoria.descripcion }}</p>
-        {% endif %}
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-gray-100">
+      <div class="flex items-center gap-3">
+        <!-- Elegant accent bar matching the EMI blue/gold brand identity -->
+        <div class="w-1.5 h-10 bg-gradient-to-b from-[#2355a0] to-[#f5a623] rounded-full"></div>
+        <div>
+          <h2 class="text-2xl font-extrabold font-display text-[#0f2042] tracking-tight leading-none">{{ item.categoria.nombre }}</h2>
+          {% if item.categoria.descripcion %}
+            <p class="text-xs text-gray-400 mt-1 font-medium">{{ item.categoria.descripcion }}</p>
+          {% endif %}
+        </div>
       </div>
-      <a href="{% url 'catalogo:catalogo' %}?categoria={{ item.categoria.id }}" class="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors self-start sm:self-center">
-        Ver todo el menú <i class="fa-solid fa-angle-right text-[10px]"></i>
+      <a href="{% url 'catalogo:catalogo' %}?categoria={{ item.categoria.id }}" class="group text-xs font-bold text-[#2355a0] hover:text-[#0f2042] flex items-center gap-1 transition-all self-start sm:self-center bg-[#2355a0]/5 hover:bg-[#2355a0]/10 px-4 py-2 rounded-xl border border-[#2355a0]/10 shadow-sm">
+        Ver todo el menú <i class="fa-solid fa-arrow-right-long text-[10px] ml-1 transform group-hover:translate-x-1 transition-transform"></i>
       </a>
     </div>
 
@@ -253,12 +257,10 @@
     </div>
 
     <div class="text-center mt-8">
-      <button onclick="cargarMasProductos({{ item.categoria.id }}, this)"
-              class="inline-flex items-center gap-2 border border-gray-200 hover:border-gray-400 text-gray-600 bg-white px-5 py-2.5 rounded-xl text-xs font-semibold transition-all shadow-sm"
-              data-page="2"
-              data-total="{{ item.productos|length }}">
-        Ver más {{ item.categoria.nombre|lower }} ↓
-      </button>
+      <a href="{% url 'catalogo:catalogo' %}?categoria={{ item.categoria.id }}"
+         class="inline-flex items-center gap-2 border border-gray-200 hover:border-gray-400 text-gray-600 hover:text-gray-800 bg-white hover:bg-gray-50 px-6 py-3 rounded-xl text-xs font-bold transition-all shadow-sm transform hover:-translate-y-0.5 font-display">
+        Ver más productos de {{ item.categoria.nombre|lower }} <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i>
+      </a>
     </div>
   </section>
   {% endfor %}

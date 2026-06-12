@@ -198,16 +198,128 @@
 </div>
 {% endif %}
 
-<footer class="bg-emi-950 text-emi-300 border-t border-emi-800 pt-12 pb-8 mt-auto">
-  <div class="max-w-7xl mx-auto px-4 flex flex-col items-center">
-    <div class="font-display font-bold text-2xl text-white mb-4">Kiosko<span class="text-emi-gold">EMI</span></div>
-    <nav class="flex gap-6 mb-8 text-sm font-medium">
-        <a href="/" class="hover:text-white transition-colors">Inicio</a>
-        <a href="/catalogo/" class="hover:text-white transition-colors">Productos</a>
-        <a href="/nosotros/" class="hover:text-white transition-colors">Nosotros</a>
-    </nav>
-    <div class="w-full max-w-xs h-[1px] bg-emi-800 mb-6 opacity-50"></div>
-    <p class="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-bold">© 2026 Escuela Militar de Ingeniería</p>
+<footer class="bg-gradient-to-b from-[#0a1628] to-[#050b14] text-gray-300 border-t border-[#1a3460]/40 pt-16 pb-8 mt-auto">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+      
+      <!-- Columna 1: Logo & Descripción -->
+      <div class="space-y-4">
+        <div class="font-display font-bold text-2xl text-white tracking-tight">
+          <i class="fa-solid fa-shop text-emi-gold mr-1"></i> Kiosko<span class="text-emi-gold">EMI</span>
+        </div>
+        <p class="text-xs text-gray-400 leading-relaxed max-w-sm">
+          La plataforma oficial de autogestión de pedidos para la Escuela Militar de Ingeniería. Realiza tu pre-pedido en línea, paga de forma segura mediante QR y retira tu orden sin filas.
+        </p>
+        <div class="flex space-x-3 pt-2">
+          <a href="#" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 hover:text-emi-gold flex items-center justify-center transition-all border border-white/10">
+            <i class="fa-brands fa-facebook-f text-sm"></i>
+          </a>
+          <a href="#" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 hover:text-emi-gold flex items-center justify-center transition-all border border-white/10">
+            <i class="fa-brands fa-instagram text-sm"></i>
+          </a>
+          <a href="#" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 hover:text-emi-gold flex items-center justify-center transition-all border border-white/10">
+            <i class="fa-brands fa-x-twitter text-sm"></i>
+          </a>
+          <a href="#" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 hover:text-emi-gold flex items-center justify-center transition-all border border-white/10">
+            <i class="fa-solid fa-envelope text-sm"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Columna 2: Enlaces Rápidos -->
+      <div class="space-y-4">
+        <h4 class="font-display font-bold text-sm text-white uppercase tracking-wider border-l-2 border-emi-gold pl-2.5">
+          Enlaces Rápidos
+        </h4>
+        <ul class="space-y-2.5 text-xs font-medium">
+          <li>
+            <a href="/" class="hover:text-emi-gold transition-colors flex items-center gap-1.5">
+              <i class="fa-solid fa-angle-right text-[10px] text-emi-gold/50"></i> Inicio
+            </a>
+          </li>
+          <li>
+            <a href="/catalogo/" class="hover:text-emi-gold transition-colors flex items-center gap-1.5">
+              <i class="fa-solid fa-angle-right text-[10px] text-emi-gold/50"></i> Nuestro Menú
+            </a>
+          </li>
+          <li>
+            <a href="/nosotros/" class="hover:text-emi-gold transition-colors flex items-center gap-1.5">
+              <i class="fa-solid fa-angle-right text-[10px] text-emi-gold/50"></i> Sobre Nosotros
+            </a>
+          </li>
+          <li>
+            <a href="#" class="hover:text-emi-gold transition-colors flex items-center gap-1.5">
+              <i class="fa-solid fa-angle-right text-[10px] text-emi-gold/50"></i> Términos de Servicio
+            </a>
+          </li>
+          <li>
+            <a href="#" class="hover:text-emi-gold transition-colors flex items-center gap-1.5">
+              <i class="fa-solid fa-angle-right text-[10px] text-emi-gold/50"></i> Ayuda & Soporte
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Columna 3: Horarios de Atención -->
+      <div class="space-y-4">
+        <h4 class="font-display font-bold text-sm text-white uppercase tracking-wider border-l-2 border-emi-gold pl-2.5">
+          Horarios de Atención
+        </h4>
+        <ul class="space-y-3 text-xs text-gray-400">
+          <li class="flex justify-between items-center border-b border-white/5 pb-1.5">
+            <span class="font-semibold text-gray-300">Lunes a Viernes:</span>
+            <span>07:30 — 18:30</span>
+          </li>
+          <li class="flex justify-between items-center border-b border-white/5 pb-1.5">
+            <span class="font-semibold text-gray-300">Sábados:</span>
+            <span>08:00 — 13:00</span>
+          </li>
+          <li class="flex justify-between items-center pb-1.5">
+            <span class="font-semibold text-gray-300">Domingos y Feriados:</span>
+            <span class="text-red-400 font-bold bg-red-950/20 px-2 py-0.5 rounded border border-red-900/30">Cerrado</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Columna 4: Contacto e Información -->
+      <div class="space-y-4">
+        <h4 class="font-display font-bold text-sm text-white uppercase tracking-wider border-l-2 border-emi-gold pl-2.5">
+          Contacto & Soporte
+        </h4>
+        <ul class="space-y-3 text-xs text-gray-400">
+          <li class="flex items-start gap-2.5">
+            <i class="fa-solid fa-location-dot text-emi-gold mt-0.5 flex-shrink-0"></i>
+            <span>Campus Principal EMI, Pabellón A — Planta Baja</span>
+          </li>
+          <li class="flex items-center gap-2.5">
+            <i class="fa-solid fa-envelope text-emi-gold flex-shrink-0"></i>
+            <a href="mailto:kiosko.emi@adm.emi.edu.bo" class="hover:text-white transition-colors">kiosko.emi@adm.emi.edu.bo</a>
+          </li>
+          <li class="flex items-center gap-2.5">
+            <i class="fa-solid fa-phone text-emi-gold flex-shrink-0"></i>
+            <span>+591 2 2224444 (Int. 320)</span>
+          </li>
+        </ul>
+        <div class="pt-2">
+          <div class="inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-lg text-[10px] font-bold">
+            <i class="fa-solid fa-shield-halved"></i> Transacciones encriptadas
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Divisor y Copyright -->
+    <div class="border-t border-[#1a3460]/20 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500 font-medium">
+      <div>
+        © 2026 <span class="text-gray-400">Escuela Militar de Ingeniería</span>. Todos los derechos reservados.
+      </div>
+      <div class="flex gap-4">
+        <a href="#" class="hover:text-gray-400 transition-colors">Política de Privacidad</a>
+        <span>·</span>
+        <a href="#" class="hover:text-gray-400 transition-colors">Términos y Condiciones</a>
+      </div>
+    </div>
   </div>
 </footer>
 

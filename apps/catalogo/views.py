@@ -19,11 +19,11 @@ def vista_inicio(request):
     # Productos destacados
     destacados  = Producto.objects.filter(activo=True, destacado=True)\
                                   .select_related('categoria')[:8]
-    # 5 productos por categoría para preview
+    # 4 productos por categoría para preview
     cats_preview = []
     for cat in categorias:
         prods = Producto.objects.filter(activo=True, categoria=cat)\
-                                .prefetch_related('ofertas')[:5]
+                                .prefetch_related('ofertas')[:4]
         if prods.exists():
             cats_preview.append({'categoria': cat, 'productos': prods})
 
