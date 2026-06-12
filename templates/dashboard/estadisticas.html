@@ -1,10 +1,27 @@
 {% extends 'base.html' %}
 {% load static %}
+
+{% block mensajes %}{% endblock %}
+
 {% block content %}
 <div class="min-h-screen bg-[#f8fafc] flex flex-col lg:flex-row">
   {% include 'dashboard/sidebar.html' %}
 
   <main class="flex-1 p-6 sm:p-8 lg:p-10 space-y-8">
+    <!-- Mensajes de Alerta/Éxito Locales -->
+    {% if messages %}
+    <div class="space-y-2">
+      {% for msg in messages %}
+      <div class="p-4 rounded-xl flex items-center gap-3 border shadow-sm text-sm
+        {% if msg.tags == 'error' %} bg-red-50 text-red-800 border-red-200
+        {% elif msg.tags == 'warning' %} bg-amber-50 text-amber-800 border-amber-200
+        {% else %} bg-emerald-50 text-emerald-800 border-emerald-200 {% endif %}">
+        <i class="fa-solid {% if msg.tags == 'error' %}fa-circle-xmark{% else %}fa-circle-check{% endif %} text-lg text-opacity-80"></i>
+        <span class="flex-1 font-medium">{{ msg }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
     <div class="border-b border-gray-100 pb-5">
       <h1 class="text-2xl font-black font-display text-[#0f2042]">Auditoría de Ventas</h1>
       <p class="text-xs text-gray-400 mt-0.5 font-medium">Análisis profundo de rentabilidad y demanda de productos.</p>

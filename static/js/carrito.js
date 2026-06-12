@@ -1,6 +1,54 @@
-// ── Estado del carrito (persiste en sessionStorage) ──
+// ── Toast Notificación Premium (Definida primero) ────────────────────────────────────────
+function mostrarToast(mensaje, tipo = 'success') {
+  let wrap = document.getElementById('toast-wrap');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'toast-wrap';
+    wrap.className = 'fixed bottom-6 right-6 flex flex-col gap-2 z-[9999]';
+    document.body.appendChild(wrap);
+  }
+  const toast = document.createElement('div');
+  toast.className = 'bg-emi-900 text-white px-5 py-3.5 rounded-xl text-xs font-bold shadow-2xl border-l-4 border-emi-gold flex items-center gap-2.5 min-w-[250px] transition-all transform translate-x-0 duration-300';
+  
+  // Icon
+  const icon = document.createElement('i');
+  icon.className = 'fa-solid fa-circle-check text-emi-gold text-sm';
+  toast.appendChild(icon);
+  
+  // Text
+  const text = document.createElement('span');
+  text.textContent = mensaje;
+  toast.appendChild(text);
+  
+  wrap.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('opacity-0', 'translate-x-10');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// ── Estado del carrito (persiste en sessionStorage con sanitización) ──
 const Carrito = {
-  items: JSON.parse(sessionStorage.getItem('carrito') || '[]'),
+  items: (() => {
+    try {
+      const stored = sessionStorage.getItem('carrito');
+      if (!stored) return [];
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        return parsed.map(item => ({
+          id: parseInt(item.id),
+          nombre: item.nombre || '',
+          precio: parseFloat(item.precio.toString().replace(',', '.')) || 0,
+          imagen: item.imagen || '',
+          cantidad: parseInt(item.cantidad) || 1,
+          notas: item.notas || ''
+        }));
+      }
+    } catch(e) {
+      console.error("Error parsing cart storage:", e);
+    }
+    return [];
+  })(),
 
   guardar() {
     sessionStorage.setItem('carrito', JSON.stringify(this.items));
@@ -8,16 +56,21 @@ const Carrito = {
     this.renderItems();
   },
 
-  agregar(producto) {
+  agregar(producto, cantidad = 1) {
+    const qty = parseInt(cantidad) || 1;
     const existe = this.items.find(i => i.id === producto.id);
     if (existe) {
-      existe.cantidad += 1;
+      existe.cantidad += qty;
+      // Combinar notas si existen y son diferentes
+      if (producto.notas && existe.notas !== producto.notas) {
+        existe.notas = existe.notas ? `${existe.notas}, ${producto.notas}` : producto.notas;
+      }
     } else {
-      this.items.push({ ...producto, cantidad: 1 });
+      this.items.push({ ...producto, cantidad: qty });
     }
     this.guardar();
     this.abrirSidebar();
-    mostrarToast(`${producto.nombre} agregado al carrito`);
+    mostrarToast(`${producto.nombre} (${qty}) agregado al carrito`);
   },
 
   cambiarCantidad(id, delta) {
@@ -47,7 +100,7 @@ const Carrito = {
   },
 
   actualizarBadge() {
-    const badge = document.querySelector('.cart-badge .badge');
+    const badge = document.getElementById('cart-count');
     if (!badge) return;
     const total = this.totalItems();
     badge.textContent = total;
@@ -60,27 +113,29 @@ const Carrito = {
 
     if (this.items.length === 0) {
       container.innerHTML = `
-        <div style="text-align:center;padding:3rem 1rem;color:var(--color-text-muted)">
-          <div style="font-size:2.5rem;margin-bottom:.75rem">🛒</div>
-          <p>Tu carrito está vacío</p>
+        <div class="text-center py-20 text-gray-400 opacity-60">
+          <i class="fa-solid fa-box-open text-4xl mb-3 block"></i>
+          <p class="text-sm font-medium">Tu carrito está vacío</p>
         </div>`;
     } else {
       container.innerHTML = this.items.map(item => `
-        <div class="cart-item" data-id="${item.id}">
-          <img class="cart-item-img"
-               src="${item.imagen || '/static/img/placeholder.jpg'}"
-               alt="${item.nombre}">
-          <div class="cart-item-info">
-            <div class="cart-item-name">${item.nombre}</div>
-            <div class="cart-item-price">Bs. ${(item.precio * item.cantidad).toFixed(2)}</div>
-            <div class="cart-qty" style="margin-top:.4rem">
-              <button onclick="Carrito.cambiarCantidad(${item.id}, -1)">−</button>
-              <span style="font-weight:600;min-width:20px;text-align:center">${item.cantidad}</span>
-              <button onclick="Carrito.cambiarCantidad(${item.id}, +1)">+</button>
+        <div class="flex items-center gap-4 bg-gray-50 border border-gray-100 p-3 rounded-2xl relative" data-id="${item.id}">
+          <div class="w-12 h-12 rounded-lg bg-white overflow-hidden border border-gray-100 flex-shrink-0">
+            ${item.imagen ? `<img src="${item.imagen}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-gray-300 text-lg"><i class="fa-solid fa-burger"></i></div>`}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs font-bold text-gray-800 truncate leading-tight">${item.nombre}</div>
+            <div class="text-xs font-black text-emi-900 mt-1">Bs. ${(item.precio * item.cantidad).toFixed(2)}</div>
+            ${item.notas ? `<div class="text-[9px] text-gray-400 italic mt-0.5 truncate max-w-[150px]">Nota: ${item.notas}</div>` : ''}
+            <div class="flex items-center gap-2 mt-2 bg-white border border-gray-200 rounded-lg p-1 inline-flex">
+              <button onclick="Carrito.cambiarCantidad(${item.id}, -1)" class="w-6 h-6 flex items-center justify-center text-xs font-bold text-emi-600 hover:bg-gray-100 rounded transition-colors">−</button>
+              <span class="text-xs font-bold text-gray-800 min-w-[15px] text-center">${item.cantidad}</span>
+              <button onclick="Carrito.cambiarCantidad(${item.id}, 1)" class="w-6 h-6 flex items-center justify-center text-xs font-bold text-emi-600 hover:bg-gray-100 rounded transition-colors">+</button>
             </div>
           </div>
-          <button onclick="Carrito.eliminar(${item.id})"
-                  style="background:none;border:none;color:var(--color-text-muted);cursor:pointer;font-size:1.1rem;padding:.25rem">✕</button>
+          <button onclick="Carrito.eliminar(${item.id})" class="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-xs transition-colors p-1">
+            ✕
+          </button>
         </div>
       `).join('');
     }
@@ -90,47 +145,27 @@ const Carrito = {
   },
 
   abrirSidebar() {
-    document.getElementById('cart-sidebar')?.classList.add('open');
-    document.getElementById('cart-overlay')?.classList.add('active');
+    const sidebar = document.getElementById('cart-sidebar');
+    const overlay = document.getElementById('cart-overlay');
+    if (sidebar && overlay) {
+      sidebar.classList.remove('translate-x-full');
+      sidebar.classList.add('translate-x-0');
+      overlay.classList.remove('hidden');
+      setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+    }
   },
 
   cerrarSidebar() {
-    document.getElementById('cart-sidebar')?.classList.remove('open');
-    document.getElementById('cart-overlay')?.classList.remove('active');
+    const sidebar = document.getElementById('cart-sidebar');
+    const overlay = document.getElementById('cart-overlay');
+    if (sidebar && overlay) {
+      sidebar.classList.remove('translate-x-0');
+      sidebar.classList.add('translate-x-full');
+      overlay.classList.add('opacity-0');
+      setTimeout(() => overlay.classList.add('hidden'), 300);
+    }
   }
 };
-
-// ── Toast ────────────────────────────────────────
-function mostrarToast(mensaje, tipo = 'success') {
-  let wrap = document.getElementById('toast-wrap');
-  if (!wrap) {
-    wrap = document.createElement('div');
-    wrap.id = 'toast-wrap';
-    wrap.style.cssText = `
-      position:fixed;bottom:1.5rem;right:1.5rem;
-      display:flex;flex-direction:column;gap:.5rem;z-index:999`;
-    document.body.appendChild(wrap);
-  }
-  const toast = document.createElement('div');
-  toast.style.cssText = `
-    background:var(--blue-900);color:var(--white);
-    padding:.75rem 1.25rem;border-radius:var(--radius-md);
-    font-size:.875rem;font-family:var(--font-display);
-    box-shadow:var(--shadow-lg);animation:toastIn .25s ease;
-    border-left:4px solid var(--color-accent);
-    max-width:300px;`;
-  toast.textContent = mensaje;
-  wrap.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
-}
-
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes toastIn {
-    from { opacity:0; transform:translateX(20px); }
-    to   { opacity:1; transform:translateX(0); }
-  }`;
-document.head.appendChild(style);
 
 document.addEventListener('DOMContentLoaded', () => {
   Carrito.actualizarBadge();

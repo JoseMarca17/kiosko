@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block titulo %}Editar Producto — KioskoEMI{% endblock %}
+
+{% block mensajes %}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#f8fafc] flex flex-col lg:flex-row">
+  <!-- Sidebar lateral -->
+  {% include 'dashboard/sidebar.html' %}
+
+  <!-- Cuerpo principal centrado -->
+  <main class="flex-1 p-6 sm:p-8 lg:p-10 space-y-6 flex flex-col justify-start">
+    <div class="w-full max-w-2xl mx-auto space-y-6">
+      
+      <!-- Mensajes de Alerta/Éxito Locales -->
+      {% if messages %}
+      <div class="space-y-2">
+        {% for msg in messages %}
+        <div class="p-4 rounded-xl flex items-center gap-3 border shadow-sm text-sm
+          {% if msg.tags == 'error' %} bg-red-50 text-red-800 border-red-200
+          {% elif msg.tags == 'warning' %} bg-amber-50 text-amber-800 border-amber-200
+          {% else %} bg-emerald-50 text-emerald-800 border-emerald-200 {% endif %}">
+          <i class="fa-solid {% if msg.tags == 'error' %}fa-circle-xmark{% else %}fa-circle-check{% endif %} text-lg text-opacity-80"></i>
+          <span class="flex-1 font-medium">{{ msg }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      
+      <!-- Encabezado de la página -->
+      <div class="border-b border-gray-100 pb-5">
+        <h1 class="text-2xl font-black font-display text-[#0f2042]">Editar Producto</h1>
+        <p class="text-xs text-gray-400 mt-0.5 font-medium">Modifica los campos del producto seleccionado.</p>
+      </div>
+
+      <!-- Tarjeta del Formulario -->
+      <div class="bg-white border border-gray-100 rounded-3xl shadow-lg overflow-hidden">
+        <div class="p-6 border-b border-gray-100 bg-[#0f2042] text-white flex items-center justify-between shadow-inner">
+          <h3 class="font-bold font-display text-sm tracking-tight flex items-center gap-2">
+            <i class="fa-solid fa-pen-to-square text-emi-gold"></i> Modificar: {{ producto.nombre }}
+          </h3>
+          <span class="text-[10px] font-bold bg-white/10 text-white px-3 py-1 rounded-full uppercase tracking-wider">ID: {{ producto.id }}</span>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="p-8 space-y-5">
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="p-4 bg-red-50 border border-red-200 text-red-800 text-xs font-semibold rounded-xl">
+              {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% for field in form %}
+            <div class="space-y-1.5">
+              {% if field.field.widget.input_type == "checkbox" %}
+                <div class="flex items-center gap-2.5 pt-1">
+                  {{ field }}
+                  <label for="{{ field.id_for_label }}" class="text-xs font-bold text-gray-600 tracking-wide cursor-pointer select-none">
+                    {{ field.label }}
+                  </label>
+                </div>
+              {% else %}
+                <label for="{{ field.id_for_label }}" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                  {{ field.label }}
+                </label>
+                {{ field }}
+              {% endif %}
+
+              {% if field.errors %}
+                <p class="text-[10px] text-red-600 font-medium mt-1">
+                  {% for error in field.errors %}{{ error }}{% endfor %}
+                </p>
+              {% endif %}
+            </div>
+          {% endfor %}
+
+          <!-- Botones de Acción -->
+          <div class="pt-6 border-t border-gray-100 flex gap-4">
+            <a href="{% url 'dashboard:productos' %}" class="flex-1 text-center bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-3.5 rounded-xl transition-all text-xs uppercase tracking-wider block">
+              Cancelar
+            </a>
+            <button type="submit" class="flex-1 bg-[#2355a0] hover:bg-[#1a3460] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-900/10 text-xs uppercase tracking-wider">
+              Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </main>
+</div>
+{% endblock %}

@@ -2,17 +2,19 @@ from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from .models import Producto, Categoria, Oferta
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q, F
 
 
 def vista_inicio(request):
     """Página principal con banner, ofertas y productos por categoría"""
     categorias  = Categoria.objects.filter(activo=True).order_by('orden')
-    # Ofertas activas para el banner
+    # Ofertas activas para el banner (no agotadas)
     ofertas     = Oferta.objects.filter(
         activo=True,
         fecha_inicio__lte=timezone.now(),
         fecha_fin__gte=timezone.now()
+    ).filter(
+        Q(limite_cantidad__isnull=True) | Q(cantidad_vendida__lt=F('limite_cantidad'))
     ).select_related('producto')[:5]
     # Productos destacados
     destacados  = Producto.objects.filter(activo=True, destacado=True)\
@@ -75,6 +77,8 @@ def vista_detalle_producto(request, pk):
         activo=True,
         fecha_inicio__lte=timezone.now(),
         fecha_fin__gte=timezone.now()
+    ).filter(
+        Q(limite_cantidad__isnull=True) | Q(cantidad_vendida__lt=F('limite_cantidad'))
     ).first()
 
     return render(request, 'catalogo/detalle_producto.html', {

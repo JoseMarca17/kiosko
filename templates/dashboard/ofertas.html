@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block titulo %}Gestión de Ofertas y Descuentos — KioskoEMI{% endblock %}
+
+{% block mensajes %}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#f8fafc] flex flex-col lg:flex-row">
+  {% include 'dashboard/sidebar.html' %}
+
+  <main class="flex-1 p-6 sm:p-8 lg:p-10 space-y-6">
+    <!-- Mensajes de Alerta/Éxito Locales -->
+    {% if messages %}
+    <div class="space-y-2">
+      {% for msg in messages %}
+      <div class="p-4 rounded-xl flex items-center gap-3 border shadow-sm text-sm
+        {% if msg.tags == 'error' %} bg-red-50 text-red-800 border-red-200
+        {% elif msg.tags == 'warning' %} bg-amber-50 text-amber-800 border-amber-200
+        {% else %} bg-emerald-50 text-emerald-800 border-emerald-200 {% endif %}">
+        <i class="fa-solid {% if msg.tags == 'error' %}fa-circle-xmark{% else %}fa-circle-check{% endif %} text-lg text-opacity-80"></i>
+        <span class="flex-1 font-medium">{{ msg }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Encabezado de la Página -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-5">
+      <div>
+        <h1 class="text-2xl font-black font-display text-[#0f2042]">Ofertas y Descuentos</h1>
+        <p class="text-xs text-gray-400 mt-0.5">Define precios promocionales de productos con vigencia temporal.</p>
+      </div>
+      <button onclick="document.getElementById('modal-oferta').classList.remove('hidden')" class="bg-emi-gold hover:bg-emi-goldHover text-emi-950 font-bold text-xs px-5 py-3 rounded-xl transition-all shadow-lg shadow-emi-gold/20">
+        <i class="fa-solid fa-plus mr-1"></i> Nueva Oferta
+      </button>
+    </div>
+
+    <!-- Barra de Filtros y Búsqueda -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center bg-white border border-gray-100 rounded-3xl p-5 shadow-sm mb-6">
+      <!-- Buscador -->
+      <div class="relative w-full">
+        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+        <input type="text" id="ofertas-search" oninput="filtrarTabla()" placeholder="Buscar por producto..." class="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-10 pr-4 py-3 text-xs focus:outline-none focus:border-emi-600 focus:bg-white transition-all text-gray-800 placeholder-gray-400 shadow-inner">
+      </div>
+
+      <!-- Filtro Categoria -->
+      <div class="relative w-full">
+        <i class="fa-solid fa-filter absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+        <select id="ofertas-categoria" onchange="filtrarTabla()" class="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-10 pr-10 py-3 text-xs focus:outline-none focus:border-emi-600 focus:bg-white transition-all text-gray-700 font-bold uppercase tracking-wider appearance-none cursor-pointer shadow-inner">
+          <option value="">Todas las Categorías</option>
+          {% for cat in categorias %}
+            <option value="{{ cat.nombre|lower }}">{{ cat.nombre }}</option>
+          {% endfor %}
+        </select>
+        <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] pointer-events-none"></i>
+      </div>
+
+      <!-- Filtro Estado -->
+      <div class="relative w-full">
+        <i class="fa-solid fa-clock-rotate-left absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+        <select id="ofertas-estado" onchange="filtrarTabla()" class="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-10 pr-10 py-3 text-xs focus:outline-none focus:border-emi-600 focus:bg-white transition-all text-gray-700 font-bold uppercase tracking-wider appearance-none cursor-pointer shadow-inner">
+          <option value="">Todos los Estados</option>
+          <option value="vigente">Vigentes</option>
+          <option value="programada">Programadas</option>
+          <option value="expirada">Expiradas</option>
+          <option value="desactivada">Desactivadas</option>
+        </select>
+        <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] pointer-events-none"></i>
+      </div>
+    </div>
+
+    <!-- Tabla de Ofertas -->
+    <div class="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-gray-50 border-b border-gray-100 text-gray-400 font-bold uppercase tracking-wider text-[10px]">
+          <tr>
+            <th class="p-4 pl-6">Producto</th>
+            <th class="p-4">Categoría</th>
+            <th class="p-4">Descuento</th>
+            <th class="p-4">Límite / Vendidos</th>
+            <th class="p-4">Período de Vigencia</th>
+            <th class="p-4 text-center">Estado</th>
+            <th class="p-4 text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          {% for ofe in ofertas %}
+          <tr class="hover:bg-gray-50/50 transition-colors {% if not ofe.activo %}opacity-60 bg-gray-50/30{% endif %}">
+            <td class="p-4 pl-6 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden border border-gray-200">
+                {% if ofe.producto.imagen %}<img src="{{ ofe.producto.imagen.url }}" class="w-full h-full object-cover">{% else %}<div class="w-full h-full flex items-center justify-center text-gray-400 text-lg"><i class="fa-solid fa-burger"></i></div>{% endif %}
+              </div>
+              <span class="font-bold text-gray-900 product-name">{{ ofe.producto.nombre }}</span>
+            </td>
+            <td class="p-4 text-gray-500 font-medium product-category">{{ ofe.producto.categoria.nombre }}</td>
+            <td class="p-4 font-black text-emi-900">
+              {% if ofe.tipo_descuento == 'porcentaje' %}
+                {{ ofe.valor_descuento|floatformat:0 }}% desc.
+              {% else %}
+                - Bs. {{ ofe.valor_descuento|floatformat:2 }}
+              {% endif %}
+            </td>
+            <td class="p-4 text-gray-500 font-medium">
+              {% if ofe.limite_cantidad %}
+                <span class="font-bold text-gray-700">{{ ofe.cantidad_vendida }}</span> <span class="text-gray-400">/ {{ ofe.limite_cantidad }}</span>
+                {% if ofe.cantidad_vendida >= ofe.limite_cantidad %}
+                  <span class="block text-[9px] text-red-500 font-bold uppercase tracking-wider mt-0.5">Agotada</span>
+                {% else %}
+                  <span class="block text-[9px] text-emerald-600 font-bold uppercase tracking-wider mt-0.5">Disponible</span>
+                {% endif %}
+              {% else %}
+                <span class="text-gray-400">Todo el stock</span>
+              {% endif %}
+            </td>
+            <td class="p-4 text-gray-400 font-medium whitespace-nowrap">
+              <span class="block text-gray-600 text-[10px]"><span class="font-bold">INICIO:</span> {{ ofe.fecha_inicio|date:"d M Y, H:i" }}</span>
+              <span class="block text-gray-500 text-[10px] mt-0.5"><span class="font-bold">FIN:</span> {{ ofe.fecha_fin|date:"d M Y, H:i" }}</span>
+            </td>
+            <td class="p-4 text-center offer-status-cell" 
+                {% if not ofe.activo %}
+                  data-status="desactivada"
+                {% elif now < ofe.fecha_inicio %}
+                  data-status="programada"
+                {% elif now > ofe.fecha_fin %}
+                  data-status="expirada"
+                {% else %}
+                  data-status="vigente"
+                {% endif %}>
+              {% if not ofe.activo %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-200 uppercase">
+                  <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span> Desactivada
+                </span>
+              {% elif now < ofe.fecha_inicio %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 uppercase">
+                  <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Programada
+                </span>
+              {% elif now > ofe.fecha_fin %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100 uppercase">
+                  <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Expirada
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Vigente
+                </span>
+              {% endif %}
+            </td>
+            <td class="p-4 text-center space-x-2 whitespace-nowrap">
+              <a href="{% url 'dashboard:editar_oferta' ofe.id %}" class="inline-flex items-center justify-center w-9 h-9 bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600 rounded-xl transition-all duration-200 shadow-sm hover:shadow active:scale-95" title="Editar Oferta">
+                <i class="fa-solid fa-pen text-xs"></i>
+              </a>
+              {% if ofe.activo %}
+                <a href="{% url 'dashboard:desactivar_oferta' ofe.id %}" class="inline-flex items-center justify-center w-9 h-9 bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white hover:border-red-600 rounded-xl transition-all duration-200 shadow-sm hover:shadow active:scale-95" title="Desactivar Oferta">
+                  <i class="fa-solid fa-ban text-xs"></i>
+                </a>
+              {% else %}
+                <a href="{% url 'dashboard:desactivar_oferta' ofe.id %}" class="inline-flex items-center justify-center w-9 h-9 bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 rounded-xl transition-all duration-200 shadow-sm hover:shadow active:scale-95" title="Activar Oferta">
+                  <i class="fa-solid fa-check text-xs"></i>
+                </a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL PARA NUEVA OFERTA -->
+<div id="modal-oferta" class="fixed inset-0 z-[100] hidden bg-emi-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-emi-900 text-white">
+      <h3 class="font-bold font-display text-base">Crear Nueva Oferta</h3>
+      <button onclick="document.getElementById('modal-oferta').classList.add('hidden')" class="text-2xl hover:text-emi-gold transition-colors">&times;</button>
+    </div>
+    <form method="POST" class="p-6 space-y-4">
+      {% csrf_token %}
+      
+      {% for field in form %}
+        <div class="space-y-1.5">
+          {% if field.field.widget.input_type == "checkbox" %}
+            <div class="flex items-center gap-2.5 pt-1">
+              {{ field }}
+              <label for="{{ field.id_for_label }}" class="text-xs font-bold text-gray-600 tracking-wide cursor-pointer select-none">
+                {{ field.label }}
+              </label>
+            </div>
+          {% else %}
+            <label for="{{ field.id_for_label }}" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+              {{ field.label }}
+            </label>
+            {{ field }}
+          {% endif %}
+          
+          {% if field.errors %}
+            <p class="text-[10px] text-red-600 font-medium mt-1">{% for error in field.errors %}{{ error }}{% endfor %}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <div class="pt-4 border-t border-gray-100 flex gap-3">
+        <button type="button" onclick="document.getElementById('modal-oferta').classList.add('hidden')" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-3.5 rounded-xl transition-all text-xs uppercase tracking-wider">
+          Cancelar
+        </button>
+        <button type="submit" class="flex-1 bg-[#2355a0] hover:bg-[#1a3460] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-900/10 text-xs uppercase tracking-wider">
+          Guardar Oferta
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Live Search and Multi-filter Logic
+function filtrarTabla() {
+    const query = document.getElementById('ofertas-search').value.toLowerCase().trim();
+    const catFiltro = document.getElementById('ofertas-categoria').value.toLowerCase();
+    const estFiltro = document.getElementById('ofertas-estado').value;
+    const rows = document.querySelectorAll('tbody tr:not(#no-results-row)');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const nombreEl = row.querySelector('.product-name');
+        const catEl = row.querySelector('.product-category');
+        const statusEl = row.querySelector('.offer-status-cell');
+        
+        if (nombreEl && catEl && statusEl) {
+            const nombre = nombreEl.innerText.toLowerCase();
+            const categoria = catEl.innerText.toLowerCase();
+            const status = statusEl.getAttribute('data-status');
+
+            const matchQuery = nombre.includes(query);
+            const matchCat = catFiltro === '' || categoria === catFiltro;
+            const matchEst = estFiltro === '' || status === estFiltro;
+
+            if (matchQuery && matchCat && matchEst) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+
+    const noResults = document.getElementById('no-results-row');
+    if (visibleCount === 0) {
+        if (!noResults) {
+            const tbody = document.querySelector('tbody');
+            const tr = document.createElement('tr');
+            tr.id = 'no-results-row';
+            tr.innerHTML = `
+                <td colspan="7" class="p-10 text-center text-gray-400 bg-white">
+                    <i class="fa-solid fa-magnifying-glass text-4xl mb-3 block opacity-30"></i>
+                    <p class="text-sm font-bold text-gray-500">No se encontraron ofertas</p>
+                    <p class="text-[10px] text-gray-400 mt-1">Prueba a buscar otro término o cambiar los filtros.</p>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+    } else {
+        if (noResults) {
+            noResults.remove();
+        }
+    }
+}
+
+// Map product IDs to their Category names
+const productCategories = {
+    {% for prod in form.fields.producto.queryset %}
+        "{{ prod.id }}": "{{ prod.categoria.nombre|escapejs }}",
+    {% endfor %}
+};
+
+// Dynamically inject Category filter for product dropdown inside modal form
+document.addEventListener('DOMContentLoaded', () => {
+    const productSelect = document.getElementById('id_producto');
+    if (productSelect) {
+        const parent = productSelect.closest('.space-y-1.5');
+        
+        const filterDiv = document.createElement('div');
+        filterDiv.className = 'space-y-1.5 mb-3';
+        
+        const label = document.createElement('label');
+        label.className = 'text-[9px] font-black text-emi-600 uppercase tracking-wider block';
+        label.innerText = 'Filtrar productos por Categoría';
+        
+        const select = document.createElement('select');
+        select.id = 'form-categoria-filter';
+        select.className = 'w-full bg-blue-50/50 border border-blue-200 rounded-xl p-3.5 text-xs focus:outline-none focus:border-[#2355a0] focus:bg-white transition-all text-gray-800 font-bold uppercase tracking-wider cursor-pointer';
+        
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = '';
+        defaultOpt.innerText = 'Mostrar Todas las Categorías';
+        select.appendChild(defaultOpt);
+        
+        const categories = new Set();
+        Object.values(productCategories).forEach(cat => {
+            if (cat) categories.add(cat);
+        });
+        
+        Array.from(categories).sort().forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat;
+            opt.innerText = cat;
+            select.appendChild(opt);
+        });
+        
+        filterDiv.appendChild(label);
+        filterDiv.appendChild(select);
+        
+        parent.parentNode.insertBefore(filterDiv, parent);
+        
+        select.addEventListener('change', () => {
+            const selectedCat = select.value.toLowerCase();
+            const options = productSelect.querySelectorAll('option');
+            
+            options.forEach(opt => {
+                if (!opt.value) return; // Keep placeholder
+                const prodCat = productCategories[opt.value]?.toLowerCase();
+                if (selectedCat === '' || prodCat === selectedCat) {
+                    opt.style.display = '';
+                } else {
+                    opt.style.display = 'none';
+                }
+            });
+            
+            // Clear product selection if it is now hidden
+            const currentOpt = productSelect.options[productSelect.selectedIndex];
+            if (currentOpt && currentOpt.value && currentOpt.style.display === 'none') {
+                productSelect.value = '';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

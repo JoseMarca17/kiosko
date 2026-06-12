@@ -45,7 +45,7 @@
     
     <div class="flex items-center gap-6">
       <a href="/" class="font-display font-bold text-xl text-white tracking-tight flex items-center gap-2">
-        🏪 Kiosko<span class="text-emi-gold">EMI</span>
+        <i class="fa-solid fa-shop text-emi-gold"></i> Kiosko<span class="text-emi-gold">EMI</span>
       </a>
       <div class="hidden md:flex items-center space-x-1">
         <a href="/" class="text-emi-300 hover:text-white hover:bg-white/5 px-3 py-2 rounded-md text-sm font-medium transition-colors">Inicio</a>
@@ -58,8 +58,8 @@
       {% if user.is_authenticated %}
         <div class="hidden sm:flex items-center space-x-2 border-r border-emi-800 pr-2">
           {% if user.es_admin or user.es_staff_kiosko %}
-            <a href="/dashboard/" class="text-emi-gold hover:text-white text-xs font-semibold uppercase tracking-wider bg-emi-800 px-2.5 py-1 rounded border border-emi-600 transition-all">
-              ⚡ Dashboard
+            <a href="/dashboard/" class="text-emi-gold hover:text-white text-xs font-semibold uppercase tracking-wider bg-emi-800 px-2.5 py-1 rounded border border-emi-600 transition-all flex items-center gap-1.5">
+              <i class="fa-solid fa-chart-pie"></i> Dashboard
             </a>
           {% endif %}
         </div>
@@ -85,6 +85,7 @@
   </div>
 </nav>
 
+{% block mensajes %}
 {% if messages %}
   <div class="max-w-4xl mx-auto w-full px-4 mt-4 space-y-2 relative z-50">
     {% for msg in messages %}
@@ -98,6 +99,7 @@
     {% endfor %}
   </div>
 {% endif %}
+{% endblock %}
 
 <main class="flex-grow w-full">
   {% block content %}{% endblock %}
@@ -151,30 +153,9 @@
   </div>
 </footer>
 
-<script>
-  const Carrito = {
-    abrirSidebar: () => {
-      const sidebar = document.getElementById('cart-sidebar');
-      const overlay = document.getElementById('cart-overlay');
-      if(sidebar && overlay) {
-        sidebar.classList.remove('translate-x-full');
-        overlay.classList.remove('hidden');
-        setTimeout(() => overlay.classList.remove('opacity-0'), 10);
-      }
-    },
-    cerrarSidebar: () => {
-      const sidebar = document.getElementById('cart-sidebar');
-      const overlay = document.getElementById('cart-overlay');
-      if(sidebar && overlay) {
-        sidebar.classList.add('translate-x-full');
-        overlay.classList.add('opacity-0');
-        setTimeout(() => overlay.classList.add('hidden'), 300);
-      }
-    }
-  };
-</script>
 
-<script src="{% static 'js/carrito.js' %}"></script>
+
+<script src="{% static 'js/carrito.js' %}?v=1.2"></script>
 <script src="{% static 'js/pedidos.js' %}"></script>
 {% block js_extra %}{% endblock %}
 </body>

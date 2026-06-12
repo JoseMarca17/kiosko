@@ -2,11 +2,27 @@
 {% load static %}
 {% block titulo %}Gestión de Menú — KioskoEMI{% endblock %}
 
+{% block mensajes %}{% endblock %}
+
 {% block content %}
 <div class="min-h-screen bg-[#f8fafc] flex flex-col lg:flex-row">
-  {% include 'dashboard/sidebar.html' %} <!-- Sugerencia: Mueve el sidebar a un include -->
+  {% include 'dashboard/sidebar.html' %}
 
   <main class="flex-1 p-6 sm:p-8 lg:p-10 space-y-6">
+    <!-- Mensajes de Alerta/Éxito Locales -->
+    {% if messages %}
+    <div class="space-y-2">
+      {% for msg in messages %}
+      <div class="p-4 rounded-xl flex items-center gap-3 border shadow-sm text-sm
+        {% if msg.tags == 'error' %} bg-red-50 text-red-800 border-red-200
+        {% elif msg.tags == 'warning' %} bg-amber-50 text-amber-800 border-amber-200
+        {% else %} bg-emerald-50 text-emerald-800 border-emerald-200 {% endif %}">
+        <i class="fa-solid {% if msg.tags == 'error' %}fa-circle-xmark{% else %}fa-circle-check{% endif %} text-lg text-opacity-80"></i>
+        <span class="flex-1 font-medium">{{ msg }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-5">
       <div>
         <h1 class="text-2xl font-black font-display text-[#0f2042]">Gestión del Menú</h1>
@@ -17,6 +33,27 @@
       </button>
     </div>
 
+    <!-- Barra de Filtros y Búsqueda -->
+    <div class="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white border border-gray-100 rounded-3xl p-5 shadow-sm mb-6">
+      <!-- Buscador -->
+      <div class="relative w-full sm:w-72">
+        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+        <input type="text" id="productos-search" oninput="filtrarTabla()" placeholder="Buscar producto por nombre..." class="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-10 pr-4 py-3 text-xs focus:outline-none focus:border-emi-600 focus:bg-white transition-all text-gray-800 placeholder-gray-400 shadow-inner">
+      </div>
+
+      <!-- Filtro Categoria -->
+      <div class="relative w-full sm:w-56">
+        <i class="fa-solid fa-filter absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+        <select id="productos-categoria" onchange="filtrarTabla()" class="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-10 pr-10 py-3 text-xs focus:outline-none focus:border-emi-600 focus:bg-white transition-all text-gray-700 font-bold uppercase tracking-wider appearance-none cursor-pointer shadow-inner">
+          <option value="">Todas las Categorías</option>
+          {% for cat in categorias %}
+            <option value="{{ cat.nombre|lower }}">{{ cat.nombre }}</option>
+          {% endfor %}
+        </select>
+        <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] pointer-events-none"></i>
+      </div>
+    </div>
+
     <!-- Tabla de Productos -->
     <div class="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
       <table class="w-full text-left text-xs">
@@ -25,22 +62,45 @@
             <th class="p-4 pl-6">Producto</th>
             <th class="p-4">Categoría</th>
             <th class="p-4">Precio</th>
+            <th class="p-4 text-center">Estado</th>
             <th class="p-4 text-center">Acciones</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
           {% for prod in productos %}
-          <tr class="hover:bg-gray-50/50 transition-colors">
+          <tr class="hover:bg-gray-50/50 transition-colors {% if not prod.activo %}opacity-60 bg-gray-50/30{% endif %}">
             <td class="p-4 pl-6 flex items-center gap-3">
               <div class="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden border border-gray-200">
-                {% if prod.imagen %}<img src="{{ prod.imagen.url }}" class="w-full h-full object-cover">{% else %}<div class="w-full h-full flex items-center justify-center">🍔</div>{% endif %}
+                {% if prod.imagen %}<img src="{{ prod.imagen.url }}" class="w-full h-full object-cover">{% else %}<div class="w-full h-full flex items-center justify-center text-gray-400 text-lg"><i class="fa-solid fa-burger"></i></div>{% endif %}
               </div>
-              <span class="font-bold text-gray-900">{{ prod.nombre }}</span>
+              <span class="font-bold text-gray-900 product-name">{{ prod.nombre }}</span>
             </td>
-            <td class="p-4 text-gray-500 font-medium">{{ prod.categoria.nombre }}</td>
+            <td class="p-4 text-gray-500 font-medium product-category">{{ prod.categoria.nombre }}</td>
             <td class="p-4 font-black text-emi-900 text-sm">Bs. {{ prod.precio_base|floatformat:2 }}</td>
-            <td class="p-4 text-center space-x-2">
-              <a href="{% url 'dashboard:editar_producto' prod.id %}" class="text-emi-600 hover:bg-emi-50 p-2 rounded-lg transition-colors"><i class="fa-solid fa-pen"></i></a>
+            <td class="p-4 text-center">
+              {% if prod.activo %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Activo
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100 uppercase">
+                  <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Inactivo
+                </span>
+              {% endif %}
+            </td>
+            <td class="p-4 text-center space-x-2 whitespace-nowrap">
+              <a href="{% url 'dashboard:editar_producto' prod.id %}" class="inline-flex items-center justify-center w-9 h-9 bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600 rounded-xl transition-all duration-200 shadow-sm hover:shadow active:scale-95" title="Editar Producto">
+                <i class="fa-solid fa-pen text-xs"></i>
+              </a>
+              {% if prod.activo %}
+                <a href="{% url 'dashboard:desactivar_producto' prod.id %}" class="inline-flex items-center justify-center w-9 h-9 bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white hover:border-red-600 rounded-xl transition-all duration-200 shadow-sm hover:shadow active:scale-95" title="Dar de Baja / Desactivar">
+                  <i class="fa-solid fa-ban text-xs"></i>
+                </a>
+              {% else %}
+                <a href="{% url 'dashboard:desactivar_producto' prod.id %}" class="inline-flex items-center justify-center w-9 h-9 bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 rounded-xl transition-all duration-200 shadow-sm hover:shadow active:scale-95" title="Dar de Alta / Activar">
+                  <i class="fa-solid fa-check text-xs"></i>
+                </a>
+              {% endif %}
             </td>
           </tr>
           {% endfor %}
@@ -54,18 +114,98 @@
 <div id="modal-producto" class="fixed inset-0 z-[100] hidden bg-emi-950/60 backdrop-blur-sm flex items-center justify-center p-4">
   <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
     <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-emi-900 text-white">
-      <h3 class="font-bold font-display">Añadir Nuevo Producto</h3>
-      <button onclick="document.getElementById('modal-producto').classList.add('hidden')" class="text-2xl">&times;</button>
+      <h3 class="font-bold font-display text-base">Añadir Nuevo Producto</h3>
+      <button onclick="document.getElementById('modal-producto').classList.add('hidden')" class="text-2xl hover:text-emi-gold transition-colors">&times;</button>
     </div>
     <form method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
       {% csrf_token %}
-      {{ form.as_p }}
+      
+      {% for field in form %}
+        <div class="space-y-1.5">
+          {% if field.field.widget.input_type == "checkbox" %}
+            <div class="flex items-center gap-2.5 pt-1">
+              {{ field }}
+              <label for="{{ field.id_for_label }}" class="text-xs font-bold text-gray-600 tracking-wide cursor-pointer select-none">
+                {{ field.label }}
+              </label>
+            </div>
+          {% else %}
+            <label for="{{ field.id_for_label }}" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+              {{ field.label }}
+            </label>
+            {{ field }}
+          {% endif %}
+          
+          {% if field.errors %}
+            <p class="text-[10px] text-red-600 font-medium mt-1">{% for error in field.errors %}{{ error }}{% endfor %}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+
       <div class="space-y-1.5">
-        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Stock Inicial</label>
-        <input type="number" name="stock_inicial" value="0" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm">
+        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Stock Inicial</label>
+        <input type="number" name="stock_inicial" value="0" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-xs focus:outline-none focus:border-[#2355a0] focus:bg-white transition-all text-gray-800">
       </div>
-      <button type="submit" class="w-full bg-emi-600 text-white font-bold py-3 rounded-xl shadow-lg">Guardar Producto</button>
+
+      <div class="pt-4 border-t border-gray-100 flex gap-3">
+        <button type="button" onclick="document.getElementById('modal-producto').classList.add('hidden')" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-3.5 rounded-xl transition-all text-xs uppercase tracking-wider">
+          Cancelar
+        </button>
+        <button type="submit" class="flex-1 bg-[#2355a0] hover:bg-[#1a3460] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-900/10 text-xs uppercase tracking-wider">
+          Guardar Producto
+        </button>
+      </div>
     </form>
   </div>
 </div>
+<script>
+// Live Search and Filter Logic
+function filtrarTabla() {
+    const query = document.getElementById('productos-search').value.toLowerCase().trim();
+    const catFiltro = document.getElementById('productos-categoria').value.toLowerCase();
+    const rows = document.querySelectorAll('tbody tr:not(#no-results-row)');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const nombreEl = row.querySelector('.product-name');
+        const catEl = row.querySelector('.product-category');
+        
+        if (nombreEl && catEl) {
+            const nombre = nombreEl.innerText.toLowerCase();
+            const categoria = catEl.innerText.toLowerCase();
+
+            const matchQuery = nombre.includes(query);
+            const matchCat = catFiltro === '' || categoria === catFiltro;
+
+            if (matchQuery && matchCat) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+
+    const noResults = document.getElementById('no-results-row');
+    if (visibleCount === 0) {
+        if (!noResults) {
+            const tbody = document.querySelector('tbody');
+            const tr = document.createElement('tr');
+            tr.id = 'no-results-row';
+            tr.innerHTML = `
+                <td colspan="5" class="p-10 text-center text-gray-400 bg-white">
+                    <i class="fa-solid fa-magnifying-glass text-4xl mb-3 block opacity-30"></i>
+                    <p class="text-sm font-bold text-gray-500">No se encontraron productos</p>
+                    <p class="text-[10px] text-gray-400 mt-1">Prueba a buscar otro término o categoría.</p>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+    } else {
+        if (noResults) {
+            noResults.remove();
+        }
+    }
+}
+</script>
 {% endblock %}

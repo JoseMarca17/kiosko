@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="container page-content">
-  <h1 class="section-title fade-up fade-up-1">📦 Mis Pedidos</h1>
+  <h1 class="section-title fade-up fade-up-1"><i class="fa-solid fa-receipt text-emi-gold"></i> Mis Pedidos</h1>
   <p class="section-sub fade-up fade-up-1">Seguimiento de todos tus pedidos</p>
 
   {% if pedidos %}
@@ -12,20 +12,20 @@
     <div class="card" style="transition:box-shadow .2s;"
          onmouseover="this.style.boxShadow='var(--shadow-md)'"
          onmouseout="this.style.boxShadow=''">
-      <div style="padding:1.25rem 1.5rem;display:flex;align-items:center;
+       <div style="padding:1.25rem 1.5rem;display:flex;align-items:center;
                   justify-content:space-between;flex-wrap:wrap;gap:1rem;">
         <div style="display:flex;align-items:center;gap:1.25rem;">
           <!-- Icono estado -->
           <div style="width:48px;height:48px;border-radius:var(--radius-md);
                       background:var(--blue-50);display:flex;align-items:center;
-                      justify-content:center;font-size:1.4rem;flex-shrink:0;">
-            {% if pedido.estado.nombre == 'pendiente_pago' %}💳
-            {% elif pedido.estado.nombre == 'pendiente_validacion' %}⏳
-            {% elif pedido.estado.nombre == 'pagado' %}✅
-            {% elif pedido.estado.nombre == 'preparando' %}👨‍🍳
-            {% elif pedido.estado.nombre == 'listo' %}🔔
-            {% elif pedido.estado.nombre == 'entregado' %}🎉
-            {% else %}❌{% endif %}
+                      justify-content:center;font-size:1.2rem;flex-shrink:0;">
+            {% if pedido.estado.nombre == 'pendiente_pago' %}<i class="fa-solid fa-credit-card text-amber-500"></i>
+            {% elif pedido.estado.nombre == 'pendiente_validacion' %}<i class="fa-solid fa-hourglass-half text-amber-600"></i>
+            {% elif pedido.estado.nombre == 'pagado' %}<i class="fa-solid fa-circle-check text-green-600"></i>
+            {% elif pedido.estado.nombre == 'preparando' %}<i class="fa-solid fa-kitchen-set text-blue-600"></i>
+            {% elif pedido.estado.nombre == 'listo' %}<i class="fa-solid fa-bell text-teal-600"></i>
+            {% elif pedido.estado.nombre == 'entregado' %}<i class="fa-solid fa-circle-user text-purple-600"></i>
+            {% else %}<i class="fa-solid fa-circle-xmark text-red-600"></i>{% endif %}
           </div>
           <div>
             <div style="font-family:var(--font-display);font-weight:700;
@@ -73,7 +73,7 @@
 
   {% else %}
   <div style="text-align:center;padding:5rem 2rem;" class="fade-up fade-up-2">
-    <div style="font-size:4rem;margin-bottom:1rem;">📦</div>
+    <div style="font-size:4rem;margin-bottom:1.5rem;color:var(--color-text-muted);"><i class="fa-solid fa-folder-open"></i></div>
     <h3 style="font-family:var(--font-display);color:var(--blue-900);margin-bottom:.5rem;">
       Aún no tienes pedidos
     </h3>
@@ -81,7 +81,7 @@
       ¡Haz tu primer pedido ahora!
     </p>
     <a href="{% url 'catalogo:catalogo' %}" class="btn btn-primary btn-lg">
-      Ver catálogo →
+      Ver catálogo
     </a>
   </div>
   {% endif %}

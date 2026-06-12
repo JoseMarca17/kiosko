@@ -17,12 +17,12 @@ def vista_login(request):
             from .models import Usuario
             try:
                 user_obj = Usuario.objects.get(email=email)
-                user = authenticate(request, username=user_obj.username, password=password)
+                user = authenticate(request, username=email, password=password)
                 if user:
                     login(request, user)
                     from django.utils import timezone
-                    user.ultimo_acceso = timezone.now()
-                    user.save(update_fields=['ultimo_acceso'])
+                    user.last_login = timezone.now()
+                    user.save(update_fields=['last_login'])
                     next_url = request.GET.get('next', '/')
                     return redirect(next_url)
                 else:
@@ -43,7 +43,6 @@ def vista_registro(request):
         form = RegistroForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.username = form.cleaned_data['email']  # email como username
             user.set_password(form.cleaned_data['password'])
             # Rol estudiante por defecto
             from .models import Rol

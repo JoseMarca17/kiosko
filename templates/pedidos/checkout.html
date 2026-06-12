@@ -1,58 +1,78 @@
 {% extends 'base.html' %}
-{% block titulo %}Checkout — KioskoEMI{% endblock %}
+{% load static %}
+{% block titulo %}Confirmar Pedido — KioskoEMI{% endblock %}
 
 {% block content %}
-<div class="container-sm page-content">
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
 
-  <h1 class="section-title fade-up fade-up-1">🛒 Confirmar pedido</h1>
-
-  <!-- Steps -->
-  <div class="steps fade-up fade-up-2">
-    <div class="step active"><div class="step-num">1</div><div class="step-label">Revisar</div></div>
-    <div class="step-line"></div>
-    <div class="step"><div class="step-num">2</div><div class="step-label">Pagar</div></div>
-    <div class="step-line"></div>
-    <div class="step"><div class="step-num">3</div><div class="step-label">Listo</div></div>
+  <!-- Encabezado -->
+  <div class="border-b border-gray-100 pb-5">
+    <h1 class="text-2xl font-black font-display text-emi-900 tracking-tight flex items-center gap-2">
+      <i class="fa-solid fa-cash-register text-emi-gold"></i> Confirmar Pedido
+    </h1>
+    <p class="text-xs text-gray-400 mt-1">Revisa los artículos de tu orden y procesa tu pago al instante.</p>
   </div>
 
-  <!-- Resumen del carrito -->
-  <div class="card fade-up fade-up-3" style="margin-bottom:1.5rem;">
-    <div style="padding:1.25rem 1.5rem;border-bottom:1px solid var(--color-border);
-                background:var(--blue-900);border-radius:var(--radius-lg) var(--radius-lg) 0 0;">
-      <h3 style="font-family:var(--font-display);color:white;font-size:1rem;font-weight:600;">
-        📋 Resumen del pedido
+  <!-- Paso a Paso / Steps Indicator -->
+  <div class="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm flex items-center justify-around gap-2 text-center">
+    <div class="flex items-center gap-2 text-emi-600 font-bold">
+      <div class="w-8 h-8 rounded-full bg-emi-600 text-white flex items-center justify-center font-display text-xs font-black ring-4 ring-blue-50">1</div>
+      <span class="text-xs uppercase tracking-wider hidden sm:inline">Revisar</span>
+    </div>
+    <div class="flex-1 h-0.5 bg-gray-100 max-w-[60px]"></div>
+    <div class="flex items-center gap-2 text-gray-400 font-semibold">
+      <div class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-display text-xs font-black">2</div>
+      <span class="text-xs uppercase tracking-wider hidden sm:inline">Pagar</span>
+    </div>
+    <div class="flex-1 h-0.5 bg-gray-100 max-w-[60px]"></div>
+    <div class="flex items-center gap-2 text-gray-400 font-semibold">
+      <div class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-display text-xs font-black">3</div>
+      <span class="text-xs uppercase tracking-wider hidden sm:inline">Retirar</span>
+    </div>
+  </div>
+
+  <!-- Contenido Principal -->
+  <div class="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
+    <div class="bg-emi-900 px-6 py-4 flex items-center justify-between border-b border-emi-800 text-white">
+      <h3 class="font-display font-bold text-sm flex items-center gap-2.5">
+        <i class="fa-solid fa-clipboard-list text-emi-gold text-base"></i> Resumen de la Orden
       </h3>
+      <span class="text-[10px] font-bold uppercase tracking-wider bg-emi-800 px-2.5 py-1 rounded-md text-emi-300">Vista Previa</span>
     </div>
-    <div id="checkout-items" style="padding:1rem 1.5rem;min-height:80px;">
-      <p style="color:var(--color-text-muted);text-align:center;padding:1rem;">
-        Cargando carrito...
-      </p>
-    </div>
-    <div style="padding:1.25rem 1.5rem;border-top:1px solid var(--color-border);background:var(--gray-50);">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-family:var(--font-display);font-weight:600;color:var(--blue-900);">Total a pagar</span>
-        <span id="checkout-total"
-              style="font-family:var(--font-display);font-size:1.6rem;font-weight:800;color:var(--color-accent);">
-          Bs. 0.00
-        </span>
+
+    <!-- Lista de Artículos -->
+    <div id="checkout-items" class="p-6 divide-y divide-gray-100 space-y-4 max-h-[360px] overflow-y-auto">
+      <div class="text-center py-10 text-gray-400 opacity-60">
+        <i class="fa-solid fa-circle-notch animate-spin text-2xl mb-2.5 block text-[#2355a0]"></i>
+        <p class="text-xs font-semibold">Cargando productos de tu pedido...</p>
       </div>
     </div>
+
+    <!-- Panel de Sumatoria / Total -->
+    <div class="bg-gray-50 border-t border-gray-100 px-6 py-5 flex items-center justify-between">
+      <div>
+        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Total a Cancelar</span>
+        <span class="text-[10px] text-gray-400 block mt-0.5">Impuestos y tasas de transacción incluidos</span>
+      </div>
+      <span id="checkout-total" class="text-3xl font-black text-emi-900 font-display tracking-tight">
+        Bs. 0.00
+      </span>
+    </div>
   </div>
 
-  <!-- Notas -->
-  <div class="fade-up fade-up-3" style="margin-bottom:1.5rem;">
-    <label class="form-label">Notas del pedido (opcional)</label>
-    <textarea id="notas-pedido" class="form-control" rows="2"
-              placeholder="Alguna indicación especial para el kiosko..."></textarea>
+  <!-- Notas Adicionales -->
+  <div class="space-y-2">
+    <label for="notas-pedido" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Indicaciones especiales para la cocina (opcional)</label>
+    <textarea id="notas-pedido" rows="3" placeholder="Ej: sin mayonesa, la salteña que sea de carne picada, etc..." class="w-full bg-white border border-gray-200 rounded-2xl p-4 text-xs focus:outline-none focus:border-[#2355a0] focus:bg-white transition-all text-gray-800 placeholder-gray-400 shadow-sm"></textarea>
   </div>
 
-  <!-- Botones -->
-  <div style="display:flex;gap:1rem;" class="fade-up fade-up-3">
-    <a href="{% url 'catalogo:catalogo' %}" class="btn btn-outline" style="flex:1;justify-content:center;">
-      ← Seguir comprando
+  <!-- Botonera -->
+  <div class="flex flex-col sm:flex-row gap-3 pt-2">
+    <a href="{% url 'catalogo:catalogo' %}" class="flex-1 border border-gray-200 hover:border-gray-300 bg-white text-gray-600 font-bold py-4 rounded-xl text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 transition-all shadow-sm">
+      <i class="fa-solid fa-arrow-left"></i> Seguir Comprando
     </a>
-    <button onclick="confirmarPedido()" class="btn btn-accent btn-lg" style="flex:2;">
-      Confirmar y pagar →
+    <button onclick="confirmarPedido(event)" class="flex-1 bg-emi-gold hover:bg-emi-goldHover text-emi-950 font-bold py-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-emi-gold/20 flex items-center justify-center gap-2 active:scale-98">
+      Confirmar y Generar Pago <i class="fa-solid fa-chevron-right text-[10px]"></i>
     </button>
   </div>
 
@@ -68,9 +88,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (!items.length) {
     container.innerHTML = `
-      <div style="text-align:center;padding:2rem;color:var(--color-text-muted);">
-        <p>Tu carrito está vacío.</p>
-        <a href="{% url 'catalogo:catalogo' %}" class="btn btn-primary" style="margin-top:1rem;">
+      <div class="text-center py-10 text-gray-400">
+        <p class="text-sm font-semibold">Tu carrito está vacío.</p>
+        <a href="{% url 'catalogo:catalogo' %}" class="mt-4 inline-block bg-[#2355a0] hover:bg-[#1a3460] text-white font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-sm">
           Ver catálogo
         </a>
       </div>`;
@@ -78,15 +98,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   container.innerHTML = items.map(item => `
-    <div style="display:flex;align-items:center;gap:1rem;padding:.85rem 0;
-                border-bottom:1px solid var(--color-border);">
-      <img src="${item.imagen || '/static/img/placeholder.jpg'}"
-           style="width:52px;height:52px;border-radius:var(--radius-sm);object-fit:cover;background:var(--gray-100);">
-      <div style="flex:1;">
-        <div style="font-weight:600;color:var(--blue-900);">${item.nombre}</div>
-        <div style="font-size:.8rem;color:var(--color-text-muted);">x${item.cantidad}</div>
+    <div class="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
+      <div class="w-14 h-14 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
+        ${item.imagen ? `<img src="${item.imagen}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-burger text-gray-300 text-xl"></i>`}
       </div>
-      <div style="font-family:var(--font-display);font-weight:700;color:var(--color-primary);">
+      <div class="flex-1 min-w-0">
+        <div class="font-bold text-sm text-gray-800 truncate leading-tight">${item.nombre}</div>
+        <div class="text-[10px] text-gray-400 font-bold mt-1 uppercase tracking-wider">Cantidad: ${item.cantidad}</div>
+        ${item.notas ? `<div class="text-[10px] text-gray-400 italic mt-0.5 truncate max-w-[200px]">Detalle: ${item.notas}</div>` : ''}
+      </div>
+      <div class="font-display font-black text-sm text-emi-900 whitespace-nowrap">
         Bs. ${(item.precio * item.cantidad).toFixed(2)}
       </div>
     </div>
@@ -95,14 +116,14 @@ document.addEventListener('DOMContentLoaded', () => {
   totalEl.textContent = `Bs. ${Carrito.total().toFixed(2)}`;
 });
 
-function confirmarPedido() {
+function confirmarPedido(e) {
   const items = Carrito.items;
   if (!items.length) {
     mostrarToast('Tu carrito está vacío', 'error');
     return;
   }
 
-  const btn = event.target;
+  const btn = e.currentTarget || e.target;
   btn.disabled = true;
   btn.textContent = 'Procesando...';
 
@@ -113,7 +134,7 @@ function confirmarPedido() {
       'X-CSRFToken': '{{ csrf_token }}',
     },
     body: JSON.stringify({
-      items: items.map(i => ({ id: i.id, cantidad: i.cantidad, notas: i.notas || '' })),
+      items: items.map(i => ({ id: i.id, cantidad: i.cantidad, notes: i.notas || '' })),
       notas: document.getElementById('notas-pedido').value,
     })
   })
@@ -125,13 +146,13 @@ function confirmarPedido() {
     } else {
       mostrarToast(data.error || 'Error al crear el pedido');
       btn.disabled = false;
-      btn.textContent = 'Confirmar y pagar →';
+      btn.innerHTML = 'Confirmar y pagar <i class="fa-solid fa-circle-check"></i>';
     }
   })
   .catch(() => {
     mostrarToast('Error de conexión');
     btn.disabled = false;
-    btn.textContent = 'Confirmar y pagar →';
+    btn.innerHTML = 'Confirmar y pagar <i class="fa-solid fa-circle-check"></i>';
   });
 }
 </script>

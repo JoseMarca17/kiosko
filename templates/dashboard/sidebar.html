@@ -1,73 +1,232 @@
 {% load static %}
+<!-- BACKDROP OVERLAY PARA MOBILE -->
+<div id="sidebar-overlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-emi-950/60 backdrop-blur-sm z-[45] hidden opacity-0 transition-opacity duration-300 lg:hidden"></div>
+
+<!-- BOTÓN FLOTANTE PARA ABRIR SIDEBAR EN MOBILE -->
+<button onclick="toggleMobileSidebar()" class="lg:hidden fixed bottom-6 left-6 w-12 h-12 bg-[#0f2042] hover:bg-[#1a3460] text-white rounded-full flex items-center justify-center shadow-2xl z-40 border border-white/10 active:scale-95 transition-transform" title="Abrir Menú">
+    <i class="fa-solid fa-bars text-base"></i>
+</button>
+
 <!-- SIDEBAR LATERAL PROFESIONAL -->
-<aside class="w-full lg:w-72 bg-[#0f2042] text-white flex flex-col border-r border-[#1a3460] lg:sticky lg:top-16 lg:h-[calc(100vh-64px)] z-20 shadow-2xl">
+<aside id="dashboard-sidebar" class="fixed lg:sticky top-0 lg:top-16 left-0 h-full lg:h-[calc(100vh-64px)] w-72 bg-[#0f2042] text-white flex flex-col border-r border-[#1a3460] z-50 lg:z-20 shadow-2xl transform lg:transform-none -translate-x-full lg:translate-x-0 transition-all duration-300 ease-in-out">
     
-    <!-- Perfil del Usuario Logueado -->
-    <div class="p-6 border-b border-[#1a3460] bg-[#0a1628]/50">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-emi-gold/20 border border-emi-gold/30 flex items-center justify-center text-xl shadow-inner">
+    <!-- Botón de colapsar en Desktop (Posicionado más abajo para evitar traslape) -->
+    <button id="sidebar-toggle-desktop" class="hidden lg:flex absolute top-5 -right-3 w-6 h-6 bg-emi-gold hover:bg-emi-goldHover text-emi-950 rounded-full items-center justify-center border border-white/20 shadow-lg z-30 focus:outline-none transition-transform duration-300">
+        <i id="toggle-chevron" class="fa-solid fa-chevron-left text-[9px]"></i>
+    </button>
+
+    <!-- Botón de cerrar en Mobile (dentro del drawer) -->
+    <button onclick="toggleMobileSidebar()" class="lg:hidden absolute top-4 right-4 text-white/60 hover:text-white text-lg">
+        <i class="fa-solid fa-xmark"></i>
+    </button>
+
+    <!-- Perfil del Usuario Logueado (Ajustado con mt-2 para dar espacio al toggle button) -->
+    <div class="mt-2 p-6 border-b border-[#1a3460] bg-[#0a1628]/50 profile-container">
+        <div class="flex items-center gap-4 profile-wrapper">
+            <div class="w-12 h-12 rounded-2xl bg-emi-gold/20 border border-emi-gold/30 flex items-center justify-center text-xl shadow-inner flex-shrink-0 profile-avatar transition-all duration-300">
                 <span class="text-emi-gold font-black">{{ user.username|slice:":1"|upper }}</span>
             </div>
-            <div class="overflow-hidden">
+            <div class="overflow-hidden sidebar-hide">
                 <p class="text-xs font-black text-white truncate font-display tracking-tight">
                     {{ user.get_full_name|default:user.username }}
                 </p>
                 <p class="text-[10px] font-bold text-emi-gold uppercase tracking-[0.15em] mt-0.5">
-                    {% if user.es_admin %}Administrador{% else %}Staff Kiosko{% endif %}
+                    {% if user.es_admin or user.is_superuser %}Administrador{% else %}Staff Kiosko{% endif %}
                 </p>
             </div>
         </div>
     </div>
 
     <!-- Navegación Principal -->
-    <div class="p-6 space-y-8 flex-grow overflow-y-auto custom-scrollbar">
+    <div class="p-6 space-y-8 flex-grow overflow-y-auto custom-scrollbar navigation-container transition-all duration-300">
         
         <!-- Grupo: Operaciones -->
-        <div class="space-y-2">
-            <p class="text-[10px] font-black text-emi-300 uppercase tracking-[0.2em] px-3 opacity-60">Operaciones</p>
-            <nav class="space-y-1">
+        <div class="space-y-2 group-container">
+            <p class="text-[10px] font-black text-emi-300 uppercase tracking-[0.2em] px-3 opacity-60 sidebar-hide">Operaciones</p>
+            <nav class="space-y-1 transition-all duration-300">
                 <a href="{% url 'dashboard:index' %}" 
-                   class="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all {% if request.resolver_match.url_name == 'index' %} bg-emi-600 text-white shadow-lg shadow-blue-900/40 border border-white/10 {% else %} text-emi-300 hover:text-white hover:bg-white/5 {% endif %}">
-                    <span class="text-lg">⚡</span> Resumen Diario
+                   class="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all {% if request.resolver_match.url_name == 'index' %} bg-emi-600 text-white shadow-lg shadow-blue-900/40 border border-white/10 {% else %} text-emi-300 hover:text-white hover:bg-white/5 {% endif %}"
+                   title="Resumen Diario">
+                    <i class="fa-solid fa-chart-line text-sm w-5 text-center flex-shrink-0"></i> 
+                    <span class="sidebar-hide">Resumen Diario</span>
                 </a>
                 <a href="{% url 'dashboard:pedidos' %}" 
-                   class="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all {% if request.resolver_match.url_name == 'pedidos' %} bg-emi-600 text-white shadow-lg shadow-blue-900/40 border border-white/10 {% else %} text-emi-300 hover:text-white hover:bg-white/5 {% endif %}">
-                    <span class="text-lg">📦</span> Gestión Pedidos
+                   class="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all {% if request.resolver_match.url_name == 'pedidos' %} bg-emi-600 text-white shadow-lg shadow-blue-900/40 border border-white/10 {% else %} text-emi-300 hover:text-white hover:bg-white/5 {% endif %}"
+                   title="Gestión Pedidos">
+                    <i class="fa-solid fa-box text-sm w-5 text-center flex-shrink-0"></i> 
+                    <span class="sidebar-hide">Gestión Pedidos</span>
                 </a>
             </nav>
         </div>
 
         <!-- Grupo: Inventario -->
-        <div class="space-y-2">
-            <p class="text-[10px] font-black text-emi-300 uppercase tracking-[0.2em] px-3 opacity-60">Almacén</p>
-            <nav class="space-y-1">
+        <div class="space-y-2 group-container">
+            <p class="text-[10px] font-black text-emi-300 uppercase tracking-[0.2em] px-3 opacity-60 sidebar-hide">Almacén</p>
+            <nav class="space-y-1 transition-all duration-300">
                 <a href="{% url 'dashboard:productos' %}" 
-                   class="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all {% if request.resolver_match.url_name == 'productos' %} bg-emi-600 text-white shadow-lg shadow-blue-900/40 border border-white/10 {% else %} text-emi-300 hover:text-white hover:bg-white/5 {% endif %}">
-                    <span class="text-lg">🛍️</span> Catálogo Menú
+                   class="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all {% if request.resolver_match.url_name == 'productos' or request.resolver_match.url_name == 'editar_producto' %} bg-emi-600 text-white shadow-lg shadow-blue-900/40 border border-white/10 {% else %} text-emi-300 hover:text-white hover:bg-white/5 {% endif %}"
+                   title="Catálogo Menú">
+                    <i class="fa-solid fa-tags text-sm w-5 text-center flex-shrink-0"></i> 
+                    <span class="sidebar-hide">Catálogo Menú</span>
                 </a>
                 <a href="{% url 'dashboard:inventario' %}" 
-                   class="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all {% if request.resolver_match.url_name == 'inventario' %} bg-emi-600 text-white shadow-lg shadow-blue-900/40 border border-white/10 {% else %} text-emi-300 hover:text-white hover:bg-white/5 {% endif %}">
-                    <span class="text-lg">📊</span> Control Stock
+                   class="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all {% if request.resolver_match.url_name == 'inventario' %} bg-emi-600 text-white shadow-lg shadow-blue-900/40 border border-white/10 {% else %} text-emi-300 hover:text-white hover:bg-white/5 {% endif %}"
+                   title="Control Stock">
+                    <i class="fa-solid fa-cubes text-sm w-5 text-center flex-shrink-0"></i> 
+                    <span class="sidebar-hide">Control Stock</span>
+                </a>
+                <a href="{% url 'dashboard:ofertas' %}" 
+                   class="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all {% if request.resolver_match.url_name == 'ofertas' or request.resolver_match.url_name == 'editar_oferta' %} bg-emi-600 text-white shadow-lg shadow-blue-900/40 border border-white/10 {% else %} text-emi-300 hover:text-white hover:bg-white/5 {% endif %}"
+                   title="Descuentos e Ofertas">
+                    <i class="fa-solid fa-percent text-sm w-5 text-center flex-shrink-0"></i> 
+                    <span class="sidebar-hide">Descuentos</span>
                 </a>
             </nav>
         </div>
 
         <!-- Grupo: Business Intelligence -->
-        <div class="space-y-2">
-            <p class="text-[10px] font-black text-emi-300 uppercase tracking-[0.2em] px-3 opacity-60">Análisis</p>
-            <nav class="space-y-1">
+        <div class="space-y-2 group-container">
+            <p class="text-[10px] font-black text-emi-300 uppercase tracking-[0.2em] px-3 opacity-60 sidebar-hide">Análisis</p>
+            <nav class="space-y-1 transition-all duration-300">
                 <a href="{% url 'dashboard:estadisticas' %}" 
-                   class="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all {% if request.resolver_match.url_name == 'estadisticas' %} bg-emi-600 text-white shadow-lg shadow-blue-900/40 border border-white/10 {% else %} text-emi-300 hover:text-white hover:bg-white/5 {% endif %}">
-                    <span class="text-lg">📈</span> Reportes TI
+                   class="flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all {% if request.resolver_match.url_name == 'estadisticas' %} bg-emi-600 text-white shadow-lg shadow-blue-900/40 border border-white/10 {% else %} text-emi-300 hover:text-white hover:bg-white/5 {% endif %}"
+                   title="Reportes TI">
+                    <i class="fa-solid fa-chart-bar text-sm w-5 text-center flex-shrink-0"></i> 
+                    <span class="sidebar-hide">Reportes TI</span>
                 </a>
             </nav>
         </div>
     </div>
 
     <!-- Footer del Sidebar -->
-    <div class="p-5 border-t border-[#1a3460] bg-[#0a1628]/40 space-y-3">
-        <a href="{% url 'catalogo:index' %}" class="flex items-center justify-center gap-2 w-full bg-white/5 hover:bg-white/10 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5">
-            <i class="fa-solid fa-arrow-left"></i> Volver a Tienda
+    <div class="p-5 border-t border-[#1a3460] bg-[#0a1628]/40 space-y-3 footer-container transition-all duration-300">
+        <a href="{% url 'catalogo:index' %}" class="flex items-center justify-center gap-2 w-full bg-white/5 hover:bg-white/10 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5 footer-btn" title="Volver a Tienda">
+            <i class="fa-solid fa-arrow-left flex-shrink-0"></i> 
+            <span class="sidebar-hide">Volver a Tienda</span>
         </a>
     </div>
 </aside>
+
+<!-- ESTILOS CSS EXTRA PARA COLAPSADO -->
+<style>
+    /* Efecto colapsado en pantallas grandes */
+    @media (min-width: 1024px) {
+        #dashboard-sidebar.sidebar-collapsed {
+            width: 4.5rem !important; /* w-18 (72px) */
+        }
+        
+        #dashboard-sidebar.sidebar-collapsed .sidebar-hide {
+            display: none !important;
+        }
+        
+        #dashboard-sidebar.sidebar-collapsed .profile-container {
+            padding: 1.25rem 0.5rem 1rem 0.5rem !important;
+        }
+
+        #dashboard-sidebar.sidebar-collapsed .profile-wrapper {
+            justify-content: center !important;
+            gap: 0 !important;
+        }
+
+        #dashboard-sidebar.sidebar-collapsed .profile-avatar {
+            width: 2.25rem !important; /* 36px */
+            height: 2.25rem !important; /* 36px */
+            border-radius: 0.75rem !important;
+            font-size: 0.875rem !important;
+        }
+
+        #dashboard-sidebar.sidebar-collapsed .navigation-container {
+            padding: 1rem 0.5rem !important;
+        }
+
+        #dashboard-sidebar.sidebar-collapsed .group-container {
+            margin-bottom: 1rem !important;
+            space-y: 0 !important;
+        }
+        
+        #dashboard-sidebar.sidebar-collapsed nav {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+        }
+        
+        #dashboard-sidebar.sidebar-collapsed nav a {
+            justify-content: center !important;
+            align-items: center !important;
+            padding: 0 !important;
+            width: 2.75rem !important; /* 44px */
+            height: 2.75rem !important; /* 44px */
+            border-radius: 0.75rem !important;
+        }
+        
+        #dashboard-sidebar.sidebar-collapsed nav a i {
+            margin: 0 !important;
+            font-size: 1rem !important;
+        }
+        
+        #dashboard-sidebar.sidebar-collapsed .footer-container {
+            padding: 1rem 0.5rem !important;
+        }
+
+        #dashboard-sidebar.sidebar-collapsed .footer-btn {
+            justify-content: center !important;
+            padding: 0 !important;
+            width: 2.75rem !important;
+            height: 2.75rem !important;
+            border-radius: 0.75rem !important;
+        }
+    }
+</style>
+
+<!-- SCRIPTS DE COMPORTAMIENTO DE SIDEBAR -->
+<script>
+    // Toggle Mobile Sidebar
+    function toggleMobileSidebar() {
+        const sidebar = document.getElementById('dashboard-sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        if (sidebar && overlay) {
+            const isHidden = sidebar.classList.contains('-translate-x-full');
+            if (isHidden) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+            }
+        }
+    }
+
+    // Toggle Desktop Sidebar and Persist State
+    document.addEventListener('DOMContentLoaded', () => {
+        const sidebar = document.getElementById('dashboard-sidebar');
+        const desktopToggle = document.getElementById('sidebar-toggle-desktop');
+        const chevron = document.getElementById('toggle-chevron');
+        
+        if (sidebar && desktopToggle && chevron) {
+            // Cargar estado de localStorage
+            const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+            if (isCollapsed) {
+                sidebar.classList.add('sidebar-collapsed');
+                chevron.classList.remove('fa-chevron-left');
+                chevron.classList.add('fa-chevron-right');
+            }
+            
+            desktopToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('sidebar-collapsed');
+                const collapsed = sidebar.classList.contains('sidebar-collapsed');
+                localStorage.setItem('sidebar-collapsed', collapsed);
+                
+                if (collapsed) {
+                    chevron.classList.remove('fa-chevron-left');
+                    chevron.classList.add('fa-chevron-right');
+                } else {
+                    chevron.classList.remove('fa-chevron-right');
+                    chevron.classList.add('fa-chevron-left');
+                }
+            });
+        }
+    });
+</script>

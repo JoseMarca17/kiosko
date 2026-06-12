@@ -2,10 +2,11 @@ from django.db import models
 from django.conf import settings
 
 class QRKiosko(models.Model):
+    id             = models.AutoField(primary_key=True, db_column='id_qr')
     banco          = models.CharField(max_length=100)
     titular        = models.CharField(max_length=255)
-    numero_cuenta  = models.CharField(max_length=50, blank=True)
-    imagen_qr      = models.ImageField(upload_to='qr_kiosko/')
+    numero_cuenta  = models.CharField(max_length=50, null=True, blank=True)
+    imagen_qr      = models.ImageField(upload_to='qr_kiosko/', db_column='imagen_qr_url')
     activo         = models.BooleanField(default=True)
     fecha_registro = models.DateTimeField(auto_now_add=True)
 
@@ -22,14 +23,15 @@ class Transaccion(models.Model):
         ('aprobado',             'Aprobado'),
         ('rechazado',            'Rechazado'),
     ]
-    pedido            = models.OneToOneField('pedidos.Pedido', on_delete=models.PROTECT, related_name='transaccion')
-    qr_usado          = models.ForeignKey(QRKiosko, on_delete=models.PROTECT)
+    id                = models.AutoField(primary_key=True, db_column='id_transaccion')
+    pedido            = models.OneToOneField('pedidos.Pedido', on_delete=models.PROTECT, db_column='id_pedido', related_name='transaccion')
+    qr_usado          = models.ForeignKey(QRKiosko, on_delete=models.PROTECT, db_column='id_qr_usado')
     monto             = models.DecimalField(max_digits=10, decimal_places=2)
     estado            = models.CharField(max_length=30, choices=ESTADO_CHOICES, default='pendiente_validacion')
     fecha_transaccion = models.DateTimeField(auto_now_add=True)
-    validado_por      = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    validado_por      = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, db_column='validado_por')
     fecha_validacion  = models.DateTimeField(null=True, blank=True)
-    notas_validacion  = models.TextField(blank=True)
+    notas_validacion  = models.TextField(null=True, blank=True)
 
     class Meta:
         db_table = 'transacciones'
@@ -39,8 +41,9 @@ class Transaccion(models.Model):
 
 
 class Comprobante(models.Model):
-    transaccion      = models.ForeignKey(Transaccion, on_delete=models.CASCADE, related_name='comprobantes')
-    imagen           = models.ImageField(upload_to='comprobantes/')
+    id               = models.AutoField(primary_key=True, db_column='id_comprobante')
+    transaccion      = models.ForeignKey(Transaccion, on_delete=models.CASCADE, db_column='id_transaccion', related_name='comprobantes')
+    imagen           = models.ImageField(upload_to='comprobantes/', db_column='imagen_url')
     monto_detectado  = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     hash_imagen      = models.CharField(max_length=64, unique=True, blank=True)
     fecha_subida     = models.DateTimeField(auto_now_add=True)

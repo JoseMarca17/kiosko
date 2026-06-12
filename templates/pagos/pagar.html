@@ -1,112 +1,126 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block titulo %}Pagar pedido {{ pedido.codigo_pedido }} — KioskoEMI{% endblock %}
 
 {% block content %}
-<div class="container-sm page-content">
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
 
-  <!-- Steps -->
-  <div class="steps fade-up fade-up-1" style="margin-bottom:2rem;">
-    <div class="step done"><div class="step-num">✓</div><div class="step-label">Revisar</div></div>
-    <div class="step-line done"></div>
-    <div class="step active"><div class="step-num">2</div><div class="step-label">Pagar</div></div>
-    <div class="step-line"></div>
-    <div class="step"><div class="step-num">3</div><div class="step-label">Listo</div></div>
+  <!-- Paso a Paso / Steps Indicator -->
+  <div class="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm flex items-center justify-around gap-2 text-center">
+    <div class="flex items-center gap-2 text-emerald-600 font-bold">
+      <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-display text-xs font-black">✓</div>
+      <span class="text-xs uppercase tracking-wider hidden sm:inline">Revisar</span>
+    </div>
+    <div class="flex-1 h-0.5 bg-gray-100 max-w-[60px]"></div>
+    <div class="flex items-center gap-2 text-emi-600 font-bold">
+      <div class="w-8 h-8 rounded-full bg-emi-600 text-white flex items-center justify-center font-display text-xs font-black ring-4 ring-blue-50">2</div>
+      <span class="text-xs uppercase tracking-wider hidden sm:inline">Pagar</span>
+    </div>
+    <div class="flex-1 h-0.5 bg-gray-100 max-w-[60px]"></div>
+    <div class="flex items-center gap-2 text-gray-400 font-semibold">
+      <div class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-display text-xs font-black">3</div>
+      <span class="text-xs uppercase tracking-wider hidden sm:inline">Listo</span>
+    </div>
   </div>
 
   <!-- Código del pedido -->
-  <div style="background:var(--blue-900);border-radius:var(--radius-lg);padding:1.25rem 1.5rem;
-              display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;"
-       class="fade-up fade-up-1">
+  <div class="bg-gradient-to-r from-emi-900 to-emi-950 border border-emi-800 rounded-3xl p-6 shadow-md flex items-center justify-between text-white">
     <div>
-      <div style="color:var(--blue-300);font-size:.8rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;">
-        Código de pedido
-      </div>
-      <div style="color:white;font-family:var(--font-display);font-size:1.3rem;font-weight:800;
-                  letter-spacing:.05em;">
+      <span class="text-[10px] font-bold text-emi-300 uppercase tracking-widest block">Código de Pedido</span>
+      <span class="text-xl font-black font-display tracking-wider mt-1 block">
         {{ pedido.codigo_pedido }}
-      </div>
+      </span>
     </div>
-    <div style="text-align:right;">
-      <div style="color:var(--blue-300);font-size:.8rem;">Total a pagar</div>
-      <div style="color:var(--gold-400);font-family:var(--font-display);
-                  font-size:1.8rem;font-weight:800;">
+    <div class="text-right">
+      <span class="text-[10px] font-bold text-emi-300 uppercase tracking-widest block">Total a Pagar</span>
+      <span class="text-3xl font-black text-emi-gold font-display tracking-tight mt-1 block">
         Bs. {{ pedido.total|floatformat:2 }}
-      </div>
+      </span>
     </div>
   </div>
 
-  <!-- Instrucciones + QR -->
-  <div class="card fade-up fade-up-2" style="margin-bottom:1.5rem;">
-    <div style="padding:1.5rem;text-align:center;border-bottom:1px solid var(--color-border);">
-      <h3 style="font-family:var(--font-display);font-size:1.1rem;color:var(--blue-900);margin-bottom:.5rem;">
-        📱 Paga con tu QR
-      </h3>
-      <p style="color:var(--gray-600);font-size:.9rem;">
-        Escanea el código QR con tu app bancaria o Tigo Money
-      </p>
-    </div>
-
-    {% if qr_activo %}
-    <div style="padding:2rem;text-align:center;">
-      <div style="display:inline-block;padding:1rem;background:white;
-                  border-radius:var(--radius-lg);border:2px solid var(--color-border);
-                  box-shadow:var(--shadow-md);">
-        <img src="{{ qr_activo.imagen_qr.url }}"
-             alt="QR de pago"
-             style="width:200px;height:200px;object-fit:contain;">
-      </div>
-      <p style="margin-top:1rem;font-weight:600;color:var(--blue-800);font-family:var(--font-display);">
-        {{ qr_activo.banco }}
-      </p>
-      <p style="color:var(--gray-600);font-size:.875rem;">{{ qr_activo.titular }}</p>
-      <div style="background:var(--gold-100);border:1px solid var(--gold-300);
-                  border-radius:var(--radius-md);padding:.75rem 1rem;
-                  display:inline-block;margin-top:.75rem;font-size:.875rem;color:#92400e;">
-        ⚠️ Asegúrate de pagar exactamente <strong>Bs. {{ pedido.total|floatformat:2 }}</strong>
-      </div>
-    </div>
-    {% else %}
-    <div style="padding:2rem;text-align:center;color:var(--color-text-muted);">
-      No hay QR disponible en este momento. Contacta al kiosko.
-    </div>
-    {% endif %}
-  </div>
-
-  <!-- Subir comprobante -->
-  <div class="card fade-up fade-up-3">
-    <div style="padding:1.25rem 1.5rem;border-bottom:1px solid var(--color-border);">
-      <h3 style="font-family:var(--font-display);font-size:1rem;color:var(--blue-900);">
-        📎 Sube tu comprobante de pago
-      </h3>
-    </div>
-    <div style="padding:1.5rem;">
-      <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-
-        <div class="upload-zone" id="upload-zone">
-          <div class="upload-icon">📸</div>
-          <p><strong>Haz clic</strong> o arrastra tu screenshot aquí</p>
-          <p style="font-size:.8rem;margin-top:.35rem;color:var(--color-text-muted);">
-            JPG, PNG o WEBP — máx. 5MB
-          </p>
-          <input type="file" name="comprobante" id="comprobante-input"
-                 accept="image/*" style="display:none;" required>
-        </div>
-
-        <img id="comprobante-preview"
-             style="display:none;width:100%;max-height:280px;object-fit:contain;
-                    border-radius:var(--radius-md);margin-top:1rem;
-                    border:2px solid var(--color-border);cursor:pointer;"
-             onclick="resetPreview()">
-
-        <p style="font-size:.8rem;color:var(--color-text-muted);margin-top:.75rem;">
-          💡 El kiosko verificará tu comprobante y cambiará el estado del pedido
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <!-- Instrucciones + QR -->
+    <div class="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm flex flex-col justify-between">
+      <div class="p-6 border-b border-gray-100">
+        <h3 class="font-display font-bold text-sm text-emi-900 flex items-center gap-2">
+          <i class="fa-solid fa-qrcode text-emi-gold"></i> Paga con tu QR
+        </h3>
+        <p class="text-xs text-gray-400 mt-1">
+          Escanea el código QR con tu app bancaria o billetera móvil.
         </p>
+      </div>
 
-        <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:1.25rem;">
-          Enviar comprobante →
-        </button>
-      </form>
+      <div class="p-6 flex flex-col items-center justify-center flex-grow space-y-4">
+        {% if qr_activo %}
+        <div class="p-3 bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+          <img src="{{ qr_activo.imagen_qr.url }}"
+               alt="QR de pago"
+               class="w-48 h-48 object-contain">
+        </div>
+        <div class="text-center">
+          <h4 class="font-display font-bold text-sm text-emi-900">{{ qr_activo.banco }}</h4>
+          <p class="text-xs text-gray-400 mt-0.5">{{ qr_activo.titular }}</p>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-800 flex items-start gap-2.5 w-full">
+          <i class="fa-solid fa-triangle-exclamation text-amber-600 mt-0.5"></i>
+          <span>Asegúrate de transferir exactamente <strong>Bs. {{ pedido.total|floatformat:2 }}</strong>.</span>
+        </div>
+        {% else %}
+        <div class="text-center py-10 text-gray-400">
+          <i class="fa-solid fa-triangle-exclamation text-3xl mb-2 text-amber-500"></i>
+          <p class="text-xs font-semibold">No hay un QR activo disponible. Por favor contacta al administrador.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Subir comprobante -->
+    <div class="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm flex flex-col">
+      <div class="p-6 border-b border-gray-100">
+        <h3 class="font-display font-bold text-sm text-emi-900 flex items-center gap-2">
+          <i class="fa-solid fa-file-invoice-dollar text-emi-gold"></i> Sube tu Comprobante
+        </h3>
+        <p class="text-xs text-gray-400 mt-1">
+          Registra el pago para que el kiosko pueda validarlo.
+        </p>
+      </div>
+
+      <div class="p-6 flex-grow flex flex-col justify-between">
+        <form method="post" enctype="multipart/form-data" class="space-y-4 h-full flex flex-col justify-between">
+          {% csrf_token %}
+
+          <div>
+            <div id="upload-zone" onclick="document.getElementById('comprobante-input').click()"
+                 class="border-2 border-dashed border-gray-200 hover:border-emi-600 rounded-2xl p-6 text-center cursor-pointer hover:bg-slate-50/50 transition-all flex flex-col items-center justify-center space-y-2 min-h-[160px]">
+              <i class="fa-solid fa-cloud-arrow-up text-3xl text-emi-gold"></i>
+              <p class="text-xs font-bold text-gray-600">Haz clic para subir comprobante</p>
+              <p class="text-[10px] text-gray-400">
+                Formato JPG, PNG o WEBP (máx. 5MB)
+              </p>
+              <input type="file" name="comprobante" id="comprobante-input"
+                     accept="image/*" class="hidden" required onchange="handleFileSelect(this)">
+            </div>
+
+            <!-- Preview Container -->
+            <div id="preview-container" class="hidden relative mt-2 rounded-2xl overflow-hidden border border-gray-200">
+              <img id="comprobante-preview" src="#" alt="Vista previa" class="w-full max-h-[180px] object-contain bg-gray-50">
+              <button type="button" onclick="resetPreview()" class="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 shadow transition-colors">
+                <i class="fa-solid fa-trash-can text-xs"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-xs text-blue-800 flex items-start gap-2.5">
+            <i class="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
+            <span>El kiosko validará el recibo en unos momentos y preparará tu orden.</span>
+          </div>
+
+          <button type="submit" class="w-full bg-emi-gold hover:bg-emi-goldHover text-emi-950 font-bold py-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-emi-gold/20 flex items-center justify-center gap-2 active:scale-98">
+            <i class="fa-solid fa-paper-plane text-xs"></i> Enviar Comprobante
+          </button>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -115,9 +129,48 @@
 
 {% block js_extra %}
 <script>
+function handleFileSelect(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('comprobante-preview').src = e.target.result;
+      document.getElementById('upload-zone').classList.add('hidden');
+      document.getElementById('preview-container').classList.remove('hidden');
+    }
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
 function resetPreview() {
-  document.getElementById('comprobante-preview').style.display = 'none';
-  document.getElementById('upload-zone').style.display = 'block';
+  document.getElementById('comprobante-input').value = "";
+  document.getElementById('upload-zone').classList.remove('hidden');
+  document.getElementById('preview-container').classList.add('hidden');
+}
+
+// Drag & drop support
+const zone = document.getElementById('upload-zone');
+if (zone) {
+  ['dragenter', 'dragover'].forEach(eventName => {
+    zone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      zone.classList.add('border-emi-600', 'bg-slate-50');
+    }, false);
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    zone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      zone.classList.remove('border-emi-600', 'bg-slate-50');
+    }, false);
+  });
+
+  zone.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    const input = document.getElementById('comprobante-input');
+    input.files = files;
+    handleFileSelect(input);
+  }, false);
 }
 </script>
 {% endblock %}

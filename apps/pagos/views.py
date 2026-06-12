@@ -20,6 +20,19 @@ def vista_pagar(request, pedido_id):
         return redirect('pedidos:detalle', pk=pedido_id)
 
     qr_activo = QRKiosko.objects.filter(activo=True).first()
+    if not qr_activo:
+        qr_activo = QRKiosko.objects.first()
+        if qr_activo:
+            qr_activo.activo = True
+            qr_activo.save()
+        else:
+            qr_activo = QRKiosko.objects.create(
+                banco="Banco Unión (Kiosko)",
+                titular="Kiosko Universitario",
+                numero_cuenta="123-4567890-12",
+                imagen_qr="qr_kiosko/default_qr.png",
+                activo=True
+            )
 
     # Crear transacción si no existe
     transaccion, _ = Transaccion.objects.get_or_create(
@@ -85,26 +98,35 @@ def vista_validar_comprobante(request, transaccion_id):
             transaccion.pedido.estado = estado_pagado
             transaccion.pedido.save()
 
-            # El trigger de MySQL descuenta el stock automáticamente
-            # pero si prefieres manejarlo en Django:
-            for detalle in transaccion.pedido.detalles.all():
-                inv = detalle.producto.inventario
-                inv.stock_actual -= detalle.cantidad
-                inv.save()
-
+            # El stock ya fue descontado al realizar el checkout.
             return JsonResponse({'ok': True, 'mensaje': 'Pago aprobado ✓'})
 
         elif accion == 'rechazar':
-            transaccion.estado           = 'rechazado'
-            transaccion.validado_por     = request.user
-            transaccion.fecha_validacion = timezone.now()
-            transaccion.notas_validacion = data.get('motivo', '')
-            transaccion.save()
+            from django.db import transaction
+            with transaction.atomic():
+                transaccion.estado           = 'rechazado'
+                transaccion.validado_por     = request.user
+                transaccion.fecha_validacion = timezone.now()
+                transaccion.notas_validacion = data.get('motivo', '')
+                transaccion.save()
 
-            estado_cancelado           = EstadoPedido.objects.get(nombre='cancelado')
-            transaccion.pedido.estado  = estado_cancelado
-            transaccion.pedido.cancelado = True
-            transaccion.pedido.save()
+                estado_cancelado           = EstadoPedido.objects.get(nombre='cancelado')
+                transaccion.pedido.estado  = estado_cancelado
+                transaccion.pedido.cancelado = True
+                transaccion.pedido.save()
+
+                # Restaurar stock e incremento de ofertas asociadas
+                for detalle in transaccion.pedido.detalles.all():
+                    # Restaurar stock
+                    inv = detalle.producto.inventario
+                    inv.stock_actual += detalle.cantidad
+                    inv.save()
+
+                    # Revertir oferta
+                    if detalle.oferta:
+                        o = detalle.oferta
+                        o.cantidad_vendida = max(o.cantidad_vendida - detalle.cantidad, 0)
+                        o.save()
 
             return JsonResponse({'ok': True, 'mensaje': 'Pago rechazado'})
 

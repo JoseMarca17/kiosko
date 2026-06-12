@@ -1,14 +1,96 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block mensajes %}{% endblock %}
+
 {% block content %}
 <div class="min-h-screen bg-[#f8fafc] flex flex-col lg:flex-row">
   {% include 'dashboard/sidebar.html' %}
 
   <main class="flex-1 p-6 sm:p-8 lg:p-10 space-y-6">
+    <!-- Mensajes de Alerta/Éxito Locales -->
+    {% if messages %}
+    <div class="space-y-2">
+      {% for msg in messages %}
+      <div class="p-4 rounded-xl flex items-center gap-3 border shadow-sm text-sm
+        {% if msg.tags == 'error' %} bg-red-50 text-red-800 border-red-200
+        {% elif msg.tags == 'warning' %} bg-amber-50 text-amber-800 border-amber-200
+        {% else %} bg-emerald-50 text-emerald-800 border-emerald-200 {% endif %}">
+        <i class="fa-solid {% if msg.tags == 'error' %}fa-circle-xmark{% else %}fa-circle-check{% endif %} text-lg text-opacity-80"></i>
+        <span class="flex-1 font-medium">{{ msg }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
     <div class="border-b border-gray-100 pb-5">
       <h1 class="text-2xl font-black font-display text-[#0f2042]">Control de Existencias</h1>
       <p class="text-xs text-gray-400 mt-0.5 font-medium">Gestión de stock actual y umbrales de alerta.</p>
     </div>
 
+    <!-- Grid de Métricas de Inventario -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <!-- Total -->
+      <div class="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm flex items-center gap-4 border-b-4 border-b-blue-500 transition-all duration-300 hover:-translate-y-1">
+        <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shadow-inner"><i class="fa-solid fa-boxes-stacked"></i></div>
+        <div>
+          <p class="text-2xl font-black text-[#0f2042] font-display">{{ total_productos }}</p>
+          <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Total Ítems</p>
+        </div>
+      </div>
+
+      <!-- Agotados -->
+      <div class="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm flex items-center gap-4 border-b-4 border-b-red-600 transition-all duration-300 hover:-translate-y-1">
+        <div class="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center text-xl shadow-inner">
+          <i class="fa-solid fa-circle-xmark {% if agotados > 0 %}animate-pulse{% endif %}"></i>
+        </div>
+        <div>
+          <p class="text-2xl font-black text-[#0f2042] font-display">{{ agotados }}</p>
+          <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Agotados</p>
+        </div>
+      </div>
+
+      <!-- Stock Bajo -->
+      <div class="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm flex items-center gap-4 border-b-4 border-b-amber-500 transition-all duration-300 hover:-translate-y-1">
+        <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shadow-inner"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div>
+          <p class="text-2xl font-black text-[#0f2042] font-display">{{ stock_bajo }}</p>
+          <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Stock Bajo</p>
+        </div>
+      </div>
+
+      <!-- Estable -->
+      <div class="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm flex items-center gap-4 border-b-4 border-b-emerald-500 transition-all duration-300 hover:-translate-y-1">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shadow-inner"><i class="fa-solid fa-circle-check"></i></div>
+        <div>
+          <p class="text-2xl font-black text-[#0f2042] font-display">{{ saludables }}</p>
+          <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Stock Estable</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de Filtros y Búsqueda -->
+    <div class="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white border border-gray-100 rounded-3xl p-5 shadow-sm mb-6">
+      <!-- Buscador -->
+      <div class="relative w-full sm:w-72">
+        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+        <input type="text" id="inventario-search" oninput="filtrarTabla()" placeholder="Buscar producto por nombre..." class="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-10 pr-4 py-3 text-xs focus:outline-none focus:border-emi-600 focus:bg-white transition-all text-gray-800 placeholder-gray-400 shadow-inner">
+      </div>
+
+      <!-- Filtro Categoria -->
+      <div class="relative w-full sm:w-56">
+        <i class="fa-solid fa-filter absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+        <select id="inventario-categoria" onchange="filtrarTabla()" class="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-10 pr-10 py-3 text-xs focus:outline-none focus:border-emi-600 focus:bg-white transition-all text-gray-700 font-bold uppercase tracking-wider appearance-none cursor-pointer shadow-inner">
+          <option value="">Todas las Categorías</option>
+          {% for cat in categorias %}
+            <option value="{{ cat.nombre|lower }}">{{ cat.nombre }}</option>
+          {% endfor %}
+        </select>
+        <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] pointer-events-none"></i>
+      </div>
+    </div>
+
+    <!-- Tabla de Existencias -->
     <div class="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
       <table class="w-full text-left text-xs">
         <thead class="bg-gray-50 border-b border-gray-100 text-gray-400 font-bold uppercase tracking-[0.15em] text-[9px]">
@@ -21,21 +103,29 @@
         </thead>
         <tbody class="divide-y divide-gray-100">
           {% for item in inventario %}
-          <tr class="{% if item.stock_actual <= item.stock_minimo %}bg-red-50/30{% endif %}">
+          <tr class="transition-colors {% if item.stock_actual == 0 %}bg-red-50/40{% elif item.stock_actual <= item.stock_minimo %}bg-amber-50/20{% else %}hover:bg-gray-50/50{% endif %}">
             <td class="p-4 pl-6">
-              <p class="font-bold text-gray-900">{{ item.producto.nombre }}</p>
-              <p class="text-[10px] text-gray-400 uppercase">{{ item.producto.categoria.nombre }}</p>
+              <p class="font-bold text-gray-900 product-name">{{ item.producto.nombre }}</p>
+              <p class="text-[10px] text-gray-400 uppercase product-category">{{ item.producto.categoria.nombre }}</p>
             </td>
             <td class="p-4">
-              <span id="stock-val-{{ item.producto_id }}" class="text-sm font-black {% if item.stock_actual <= item.stock_minimo %}text-red-600{% else %}text-emi-600{% endif %}">
-                {{ item.stock_actual }}
-              </span> uds.
+              <div class="flex items-center gap-2">
+                <span id="stock-val-{{ item.producto_id }}" class="text-sm font-black {% if item.stock_actual == 0 %}text-red-600{% elif item.stock_actual <= item.stock_minimo %}text-amber-600{% else %}text-emi-600{% endif %}">
+                  {{ item.stock_actual }}
+                </span>
+                <span class="text-gray-400 font-semibold">uds.</span>
+                {% if item.stock_actual == 0 %}
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-100 text-red-800 border border-red-200 uppercase tracking-wider ml-2 shadow-sm">Agotado</span>
+                {% elif item.stock_actual <= item.stock_minimo %}
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200 uppercase tracking-wider ml-2 shadow-sm">Bajo Mínimo</span>
+                {% endif %}
+              </div>
             </td>
             <td class="p-4 text-gray-400 font-bold">{{ item.stock_minimo }} uds.</td>
             <td class="p-4 text-center">
               <div class="flex items-center justify-center gap-2">
-                <button onclick="actualizarStock({{ item.producto_id }}, -1)" class="w-8 h-8 rounded-lg bg-gray-100 hover:bg-red-100 hover:text-red-600 transition-colors border border-gray-200">-</button>
-                <button onclick="actualizarStock({{ item.producto_id }}, 1)" class="w-8 h-8 rounded-lg bg-gray-100 hover:bg-emerald-100 hover:text-emerald-600 transition-colors border border-gray-200">+</button>
+                <button onclick="actualizarStock({{ item.producto_id }}, -1)" class="w-8 h-8 rounded-lg bg-gray-100 hover:bg-red-100 hover:text-red-600 transition-all font-bold border border-gray-200">-</button>
+                <button onclick="actualizarStock({{ item.producto_id }}, 1)" class="w-8 h-8 rounded-lg bg-gray-100 hover:bg-emerald-100 hover:text-emerald-600 transition-all font-bold border border-gray-200">+</button>
               </div>
             </td>
           </tr>
@@ -47,6 +137,56 @@
 </div>
 
 <script>
+// Live Search and Filter Logic
+function filtrarTabla() {
+    const query = document.getElementById('inventario-search').value.toLowerCase().trim();
+    const catFiltro = document.getElementById('inventario-categoria').value.toLowerCase();
+    const rows = document.querySelectorAll('tbody tr:not(#no-results-row)');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const nombreEl = row.querySelector('.product-name');
+        const catEl = row.querySelector('.product-category');
+        
+        if (nombreEl && catEl) {
+            const nombre = nombreEl.innerText.toLowerCase();
+            const categoria = catEl.innerText.toLowerCase();
+
+            const matchQuery = nombre.includes(query);
+            const matchCat = catFiltro === '' || categoria === catFiltro;
+
+            if (matchQuery && matchCat) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+
+    const noResults = document.getElementById('no-results-row');
+    if (visibleCount === 0) {
+        if (!noResults) {
+            const tbody = document.querySelector('tbody');
+            const tr = document.createElement('tr');
+            tr.id = 'no-results-row';
+            tr.innerHTML = `
+                <td colspan="4" class="p-10 text-center text-gray-400 bg-white">
+                    <i class="fa-solid fa-magnifying-glass text-4xl mb-3 block opacity-30"></i>
+                    <p class="text-sm font-bold text-gray-500">No se encontraron productos</p>
+                    <p class="text-[10px] text-gray-400 mt-1">Prueba a buscar otro término o categoría.</p>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+    } else {
+        if (noResults) {
+            noResults.remove();
+        }
+    }
+}
+
+// AJAX Stock Updates
 function actualizarStock(prodId, cambio) {
     const el = document.getElementById(`stock-val-${prodId}`);
     let nuevoVal = parseInt(el.innerText) + cambio;
@@ -61,7 +201,13 @@ function actualizarStock(prodId, cambio) {
         body: `producto_id=${prodId}&stock=${nuevoVal}`
     })
     .then(r => r.json())
-    .then(data => { if(data.ok) el.innerText = nuevoVal; });
+    .then(data => { 
+        if(data.ok) {
+            el.innerText = nuevoVal;
+            // Recargar para actualizar tarjetas métricas y alertas
+            location.reload();
+        } 
+    });
 }
 </script>
 {% endblock %}

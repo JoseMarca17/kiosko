@@ -6,7 +6,7 @@ from datetime import timedelta
 import json
 
 from apps.usuarios.decorators import solo_admin
-from apps.catalogo.models import Producto, Categoria, Inventario
+from apps.catalogo.models import Producto, Categoria, Inventario, Oferta
 from apps.pedidos.models import Pedido, EstadoPedido, DetallePedido
 from apps.pagos.models import Transaccion, QRKiosko
 
@@ -86,7 +86,21 @@ def vista_inventario(request):
         inv.save()
         return JsonResponse({'ok': True})
 
-    return render(request, 'dashboard/inventario.html', {'inventario': inventario})
+    from django.db.models import F
+    total_productos = inventario.count()
+    agotados        = inventario.filter(stock_actual=0).count()
+    stock_bajo      = inventario.filter(stock_actual__lte=F('stock_minimo'), stock_actual__gt=0).count()
+    saludables      = inventario.filter(stock_actual__gt=F('stock_minimo')).count()
+    categorias      = Categoria.objects.all().order_by('nombre')
+
+    return render(request, 'dashboard/inventario.html', {
+        'inventario':      inventario,
+        'total_productos': total_productos,
+        'agotados':        agotados,
+        'stock_bajo':      stock_bajo,
+        'saludables':      saludables,
+        'categorias':      categorias,
+    })
 
 
 @solo_admin
@@ -110,9 +124,12 @@ def vista_productos_admin(request):
     else:
         form = ProductoForm()
 
+    categorias = Categoria.objects.all().order_by('nombre')
+
     return render(request, 'dashboard/productos.html', {
-        'productos': productos,
-        'form':      form,
+        'productos':  productos,
+        'form':       form,
+        'categorias': categorias,
     })
 
 
@@ -135,6 +152,17 @@ def vista_editar_producto(request, pk):
         'form':     form,
         'producto': producto,
     })
+
+
+@solo_admin
+def vista_desactivar_producto(request, pk):
+    producto = get_object_or_404(Producto, pk=pk)
+    producto.activo = not producto.activo
+    producto.save()
+    from django.contrib import messages
+    estado = "activado" if producto.activo else "desactivado (dado de baja)"
+    messages.success(request, f'Producto "{producto.nombre}" {estado}.')
+    return redirect('dashboard:productos')
 
 
 @solo_admin
@@ -197,3 +225,60 @@ def vista_estadisticas(request):
         'labels_cat':        json.dumps([v['producto__categoria__nombre'] for v in ventas_cat]),
         'datos_cat':         json.dumps([float(v['total']) for v in ventas_cat]),
     })
+
+
+@solo_admin
+def vista_ofertas_admin(request):
+    from apps.catalogo.forms import OfertaForm
+    ofertas = Oferta.objects.select_related('producto__categoria').order_by('-fecha_inicio')
+    categorias = Categoria.objects.all().order_by('nombre')
+    
+    if request.method == 'POST':
+        form = OfertaForm(request.POST)
+        if form.is_valid():
+            oferta = form.save()
+            from django.contrib import messages
+            messages.success(request, f'Oferta creada para el producto "{oferta.producto.nombre}".')
+            return redirect('dashboard:ofertas')
+    else:
+        form = OfertaForm()
+        
+    return render(request, 'dashboard/ofertas.html', {
+        'ofertas':    ofertas,
+        'form':       form,
+        'categorias': categorias,
+        'now':        timezone.now(),
+    })
+
+
+@solo_admin
+def vista_editar_oferta(request, pk):
+    from apps.catalogo.forms import OfertaForm
+    oferta = get_object_or_404(Oferta, pk=pk)
+    
+    if request.method == 'POST':
+        form = OfertaForm(request.POST, instance=oferta)
+        if form.is_valid():
+            form.save()
+            from django.contrib import messages
+            messages.success(request, 'Oferta actualizada con éxito.')
+            return redirect('dashboard:ofertas')
+    else:
+        form = OfertaForm(instance=oferta)
+        
+    return render(request, 'dashboard/editar_oferta.html', {
+        'form':   form,
+        'oferta': oferta,
+    })
+
+
+@solo_admin
+def vista_desactivar_oferta(request, pk):
+    oferta = get_object_or_404(Oferta, pk=pk)
+    oferta.activo = not oferta.activo
+    oferta.save()
+    
+    from django.contrib import messages
+    estado = "activada" if oferta.activo else "desactivada"
+    messages.success(request, f'La oferta del producto "{oferta.producto.nombre}" fue {estado}.')
+    return redirect('dashboard:ofertas')

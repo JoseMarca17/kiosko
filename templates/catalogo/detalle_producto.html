@@ -1,143 +1,151 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block titulo %}{{ producto.nombre }} — KioskoEMI{% endblock %}
 
 {% block content %}
-<div class="container page-content">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10" 
+     id="product-detail-container"
+     data-product-id="{{ producto.id }}"
+     data-base-price="{{ producto.precio_base|floatformat:2 }}"
+     {% if oferta_activa %}
+       data-has-offer="true"
+       data-offer-price="{{ precio_final|floatformat:2 }}"
+       data-offer-end="{{ oferta_activa.fecha_fin|date:'c' }}"
+     {% else %}
+       data-has-offer="false"
+     {% endif %}>
 
   <!-- Breadcrumb -->
-  <nav style="font-size:.85rem;color:var(--color-text-muted);margin-bottom:1.75rem;display:flex;align-items:center;gap:.5rem;">
-    <a href="{% url 'catalogo:index' %}" style="color:var(--color-primary);">Inicio</a>
-    <span>›</span>
-    <a href="{% url 'catalogo:catalogo' %}?categoria={{ producto.categoria.id }}"
-       style="color:var(--color-primary);">{{ producto.categoria.nombre }}</a>
-    <span>›</span>
-    <span style="color:var(--color-text);">{{ producto.nombre }}</span>
+  <nav class="flex items-center gap-2 text-xs font-semibold text-gray-400 mb-6 uppercase tracking-wider">
+    <a href="{% url 'catalogo:index' %}" class="text-blue-600 hover:text-blue-800 transition-colors">Inicio</a>
+    <span><i class="fa-solid fa-chevron-right text-[8px]"></i></span>
+    <a href="{% url 'catalogo:catalogo' %}?categoria={{ producto.categoria.id }}" class="text-blue-600 hover:text-blue-800 transition-colors">{{ producto.categoria.nombre }}</a>
+    <span><i class="fa-solid fa-chevron-right text-[8px]"></i></span>
+    <span class="text-gray-600 font-bold truncate max-w-[200px]">{{ producto.nombre }}</span>
   </nav>
 
   <!-- Detalle principal -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:3rem;margin-bottom:3rem;" class="fade-up fade-up-1">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm">
 
     <!-- Imagen -->
-    <div>
-      {% if producto.imagen %}
-        <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}"
-             style="width:100%;border-radius:var(--radius-xl);object-fit:cover;
-                    max-height:440px;box-shadow:var(--shadow-lg);">
-      {% else %}
-        <div style="width:100%;height:360px;border-radius:var(--radius-xl);
-                    background:var(--blue-50);display:flex;align-items:center;
-                    justify-content:center;font-size:5rem;border:2px dashed var(--color-border);">
-          🍽️
-        </div>
-      {% endif %}
+    <div class="lg:col-span-6 w-full space-y-4">
+      <div class="relative overflow-hidden rounded-2xl bg-gray-50 border border-gray-100 aspect-video sm:aspect-square max-h-[460px] flex items-center justify-center shadow-inner">
+        {% if producto.imagen %}
+          <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="w-full h-full object-cover shadow-sm transition-transform duration-500 hover:scale-102">
+        {% else %}
+          <div class="w-full h-full flex flex-col items-center justify-center text-gray-300 gap-3">
+            <i class="fa-solid fa-utensils text-7xl"></i>
+            <span class="text-xs uppercase tracking-widest font-bold text-gray-400">Sin imagen disponible</span>
+          </div>
+        {% endif %}
+      </div>
     </div>
 
     <!-- Info -->
-    <div style="display:flex;flex-direction:column;gap:1.25rem;">
-      <div>
-        <span class="badge badge-info">{{ producto.categoria.nombre }}</span>
-        {% if producto.destacado %}
-          <span class="badge badge-warning" style="margin-left:.5rem;">⭐ Destacado</span>
-        {% endif %}
+    <div class="lg:col-span-6 flex flex-col justify-between space-y-6">
+      
+      <div class="space-y-4">
+        <div class="flex flex-wrap gap-2 items-center">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-wider">
+            <i class="fa-solid fa-tag"></i> {{ producto.categoria.nombre }}
+          </span>
+          {% if producto.destacado %}
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100 uppercase tracking-wider">
+              <i class="fa-solid fa-star text-emi-gold"></i> Destacado
+            </span>
+          {% endif %}
+          {% if oferta_activa %}
+            <span id="detail-badge-oferta" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-red-50 text-red-600 border border-red-100 uppercase tracking-wider animate-pulse">
+              <i class="fa-solid fa-percent"></i> Oferta
+            </span>
+          {% endif %}
+        </div>
+
+        <div class="space-y-2">
+          <h1 class="text-3xl font-black font-display text-emi-900 tracking-tight leading-tight">
+            {{ producto.nombre }}
+          </h1>
+          {% if producto.descripcion %}
+            <p class="text-sm text-gray-500 leading-relaxed">
+              {{ producto.descripcion }}
+            </p>
+          {% else %}
+            <p class="text-sm text-gray-400 italic">
+              Sin descripción adicional para este producto.
+            </p>
+          {% endif %}
+        </div>
       </div>
 
-      <h1 style="font-family:var(--font-display);font-size:2rem;font-weight:800;
-                 color:var(--blue-900);line-height:1.2;">
-        {{ producto.nombre }}
-      </h1>
-
-      {% if producto.descripcion %}
-      <p style="color:var(--gray-600);line-height:1.75;font-size:.975rem;">
-        {{ producto.descripcion }}
-      </p>
-      {% endif %}
-
-      <!-- Precio -->
-      <div style="background:var(--blue-50);border-radius:var(--radius-lg);
-                  padding:1.25rem;border:1px solid var(--blue-100);">
+      <!-- Contenedor de Precios y Stock -->
+      <div class="bg-gray-50 border border-gray-100 rounded-2xl p-5 space-y-4">
+        
+        <!-- Live Countdown Timer para oferta activa -->
         {% if oferta_activa %}
-        <div style="display:flex;align-items:center;gap:1rem;">
-          <span style="font-family:var(--font-display);font-size:2.2rem;font-weight:800;
-                       color:var(--color-primary);">
+        <div id="detail-countdown-container" class="flex items-center justify-between text-xs text-red-600 font-bold bg-red-50 border border-red-100/50 rounded-xl px-4 py-2.5">
+          <span class="flex items-center gap-1.5"><i class="fa-solid fa-hourglass-half animate-spin"></i> La oferta termina en:</span>
+          <span id="detail-countdown-timer" class="font-black font-display tracking-tight text-red-700 text-sm" data-end="{{ oferta_activa.fecha_fin|date:'c' }}">
+            --h --m --s
+          </span>
+        </div>
+        {% endif %}
+
+        <div class="flex items-baseline gap-3">
+          <span id="detail-price-display" class="text-3xl font-black font-display text-emi-900">
             Bs. {{ precio_final|floatformat:2 }}
           </span>
-          <div>
-            <span style="font-size:1rem;color:var(--color-text-muted);
-                         text-decoration:line-through;">
-              Bs. {{ producto.precio_base }}
-            </span>
-            <div style="background:var(--color-accent);color:var(--blue-950);font-size:.7rem;
-                        font-weight:700;padding:.2rem .6rem;border-radius:99px;
-                        display:inline-block;margin-left:.5rem;font-family:var(--font-display);">
+          {% if oferta_activa %}
+            <span id="detail-price-old" class="text-sm text-gray-400 line-through">Bs. {{ producto.precio_base|floatformat:2 }}</span>
+            <span id="detail-offer-discount-badge" class="bg-red-600 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full font-display">
               {% if oferta_activa.tipo_descuento == 'porcentaje' %}
-                −{{ oferta_activa.valor_descuento }}%
+                -{{ oferta_activa.valor_descuento|floatformat:0 }}%
               {% else %}
-                −Bs.{{ oferta_activa.valor_descuento }}
+                -Bs. {{ oferta_activa.valor_descuento|floatformat:2 }}
               {% endif %}
-            </div>
-          </div>
+            </span>
+          {% endif %}
         </div>
-        <p style="font-size:.8rem;color:var(--color-text-muted);margin-top:.5rem;">
-          Oferta válida hasta {{ oferta_activa.fecha_fin|date:"d/m/Y H:i" }}
-        </p>
-        {% else %}
-        <span style="font-family:var(--font-display);font-size:2.2rem;font-weight:800;
-                     color:var(--color-primary);">
-          Bs. {{ precio_final|floatformat:2 }}
-        </span>
-        {% endif %}
-      </div>
 
-      <!-- Stock -->
-      {% if producto.inventario.stock_actual > 0 %}
-        <div style="display:flex;align-items:center;gap:.5rem;color:var(--color-success);font-size:.875rem;font-weight:500;">
-          ✅ En stock ({{ producto.inventario.stock_actual }} disponibles)
+        <div class="flex items-center gap-2 border-t border-gray-200/60 pt-3.5">
+          {% if producto.inventario.stock_actual > 0 %}
+            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+              <i class="fa-solid fa-circle-check text-sm"></i> En stock ({{ producto.inventario.stock_actual }} disponibles)
+            </span>
+          {% else %}
+            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600">
+              <i class="fa-solid fa-circle-xmark text-sm"></i> Agotado temporalmente
+            </span>
+          {% endif %}
         </div>
-      {% else %}
-        <div style="display:flex;align-items:center;gap:.5rem;color:var(--color-danger);font-size:.875rem;font-weight:500;">
-          ❌ Sin stock
-        </div>
-      {% endif %}
+      </div>
 
       <!-- Notas -->
-      <div>
-        <label class="form-label">Notas especiales (opcional)</label>
-        <input type="text" id="notas-producto"
-               placeholder="Ej: sin cebolla, extra salsa..."
-               class="form-control">
+      <div class="space-y-2">
+        <label for="notas-producto" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Notas especiales (opcional)</label>
+        <input type="text" id="notas-producto" placeholder="Ej: sin cebolla, extra salsa..." class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-xs focus:outline-none focus:border-[#2355a0] focus:bg-white transition-all text-gray-800 placeholder-gray-400 shadow-inner">
       </div>
 
-      <!-- Cantidad y agregar -->
-      <div style="display:flex;gap:1rem;align-items:center;">
-        <div style="display:flex;align-items:center;gap:.5rem;background:white;
-                    border:1.5px solid var(--color-border);border-radius:var(--radius-sm);
-                    padding:.4rem;">
-          <button onclick="cambiarCantidad(-1)"
-                  style="width:32px;height:32px;border:none;background:none;cursor:pointer;
-                         font-size:1.1rem;color:var(--blue-700);font-weight:700;
-                         border-radius:var(--radius-sm);transition:background .15s;"
-                  onmouseover="this.style.background='var(--blue-50)'"
-                  onmouseout="this.style.background='none'">−</button>
-          <span id="cantidad-display"
-                style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;
-                       min-width:32px;text-align:center;">1</span>
-          <button onclick="cambiarCantidad(1)"
-                  style="width:32px;height:32px;border:none;background:none;cursor:pointer;
-                         font-size:1.1rem;color:var(--blue-700);font-weight:700;
-                         border-radius:var(--radius-sm);transition:background .15s;"
-                  onmouseover="this.style.background='var(--blue-50)'"
-                  onmouseout="this.style.background='none'">+</button>
-        </div>
-
-        {% if producto.inventario.stock_actual > 0 %}
-        <button onclick="agregarDesdeDetalle()"
-                class="btn btn-accent btn-lg" style="flex:1;">
-          🛒 Agregar al carrito
-        </button>
+      <!-- Selección de cantidad y compra -->
+      <div class="flex flex-col sm:flex-row gap-3 pt-2">
+        {% if user.is_authenticated %}
+          {% if producto.inventario.stock_actual > 0 %}
+            <div class="flex items-center justify-between border border-gray-200 rounded-xl p-2 bg-white sm:w-1/3 shadow-sm">
+              <button type="button" onclick="cambiarCantidad(-1)" class="w-10 h-10 flex items-center justify-center text-lg font-bold text-emi-600 hover:bg-gray-100 rounded-lg transition-colors">−</button>
+              <span id="cantidad-display" class="font-display font-black text-base text-gray-800 min-w-[30px] text-center">1</span>
+              <button type="button" onclick="cambiarCantidad(1)" class="w-10 h-10 flex items-center justify-center text-lg font-bold text-emi-600 hover:bg-gray-100 rounded-lg transition-colors">+</button>
+            </div>
+            <button type="button" onclick="agregarDesdeDetalle()" class="flex-1 bg-emi-gold hover:bg-emi-goldHover text-emi-950 font-bold py-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-emi-gold/20 flex items-center justify-center gap-2 active:scale-98">
+              <i class="fa-solid fa-cart-plus text-sm"></i> Agregar al carrito
+            </button>
+          {% else %}
+            <button class="w-full bg-gray-100 text-gray-400 border border-gray-200 font-bold py-4 rounded-xl text-xs uppercase tracking-wider cursor-not-allowed" disabled>
+              Sin stock disponible
+            </button>
+          {% endif %}
         {% else %}
-        <button class="btn btn-outline btn-lg" style="flex:1;" disabled>
-          Sin stock
-        </button>
+          <a href="{% url 'usuarios:login' %}?next={{ request.path }}" class="flex-1 bg-[#2355a0] hover:bg-[#1a3460] text-white font-bold py-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-blue-900/10 flex items-center justify-center gap-2 text-center block w-full active:scale-98">
+            <i class="fa-solid fa-right-to-bracket text-sm"></i> Iniciar sesión antes de comprar
+          </a>
         {% endif %}
       </div>
 
@@ -146,28 +154,76 @@
 
   <!-- Productos relacionados -->
   {% if relacionados %}
-  <div style="border-top:1px solid var(--color-border);padding-top:2.5rem;">
-    <h2 class="section-title">También te puede gustar</h2>
-    <div class="products-grid" style="margin-top:1.25rem;">
+  <div class="border-t border-gray-200/60 pt-10">
+    <h2 class="text-xl font-bold font-display text-[#0f2042] mb-6">También te puede gustar</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       {% for rel in relacionados %}
-      <div class="card product-card">
-        <div class="card-img-wrap">
-          {% if rel.imagen %}
-            <img src="{{ rel.imagen.url }}" alt="{{ rel.nombre }}" class="card-img">
-          {% else %}
-            <div class="card-img" style="display:flex;align-items:center;justify-content:center;
-                                         background:var(--blue-50);font-size:2rem;">🍽️</div>
-          {% endif %}
+      <div class="product-card bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between group"
+           data-product-id="{{ rel.id }}"
+           data-base-price="{{ rel.precio_base|floatformat:2 }}"
+           {% with rel_oferta=rel.get_oferta_activa %}
+             {% if rel_oferta %}
+               data-has-offer="true"
+               data-offer-price="{{ rel.precio_actual|floatformat:2 }}"
+               data-offer-end="{{ rel_oferta.fecha_fin|date:'c' }}"
+             {% else %}
+               data-has-offer="false"
+             {% endif %}
+           {% endwith %}>
+        
+        <div>
+          <div class="relative h-44 bg-gray-50 overflow-hidden">
+            {% if rel.imagen %}
+              <img src="{{ rel.imagen.url }}" alt="{{ rel.nombre }}" class="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300">
+            {% else %}
+              <div class="w-full h-full flex items-center justify-center bg-blue-50/40 text-3xl text-gray-400"><i class="fa-solid fa-utensils"></i></div>
+            {% endif %}
+            
+            {% if rel.destacado %}
+              <span class="absolute top-3 left-3 bg-[#0f2042]/90 text-[#f5a623] text-[9px] font-bold px-2.5 py-1 rounded-md shadow-sm backdrop-blur-sm">
+                <i class="fa-solid fa-star text-[#f5a623]"></i> Destacado
+              </span>
+            {% endif %}
+            
+            {% with rel_oferta=rel.get_oferta_activa %}
+              <span class="badge-oferta absolute top-3 right-3 bg-red-600 text-white text-[9px] font-black px-2.5 py-1 rounded shadow-sm tracking-wider uppercase {% if not rel_oferta %}hidden{% endif %}">
+                <i class="fa-solid fa-percent text-[8px] mr-0.5"></i> Oferta
+              </span>
+            {% endwith %}
+          </div>
+          
+          <div class="p-4 space-y-1.5">
+            <h3 class="font-bold text-sm text-gray-800 font-display line-clamp-1">{{ rel.nombre }}</h3>
+            <p class="text-xs text-gray-400 line-clamp-2 leading-relaxed h-8">
+              {{ rel.descripcion|default:"Sin descripción detallada disponible." }}
+            </p>
+          </div>
         </div>
-        <div class="card-body">
-          <div class="card-title">{{ rel.nombre }}</div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.75rem;">
-            <span class="product-price">Bs. {{ rel.precio_actual|floatformat:2 }}</span>
-            <div style="display:flex;gap:.4rem;">
-              <button onclick="agregarAlCarrito({{ rel.id }},'{{ rel.nombre|escapejs }}',{{ rel.precio_actual|floatformat:2 }},'{% if rel.imagen %}{{ rel.imagen.url }}{% endif %}')"
-                      class="btn btn-accent btn-sm">+ Agregar</button>
-              <a href="{% url 'catalogo:detalle' rel.id %}" class="btn btn-ghost btn-sm">Ver</a>
-            </div>
+        
+        <div class="p-4 pt-0">
+          {% with rel_oferta=rel.get_oferta_activa %}
+          <div class="card-countdown-container mb-2 text-[10px] text-red-600 font-bold bg-red-50/50 rounded-lg px-2 py-1 flex items-center justify-between {% if not rel_oferta %}hidden{% endif %}">
+            <span><i class="fa-solid fa-clock mr-0.5"></i> Cierra:</span>
+            <span class="card-countdown-timer font-black tracking-tight" data-end="{% if rel_oferta %}{{ rel_oferta.fecha_fin|date:'c' }}{% endif %}">--:--:--</span>
+          </div>
+          {% endwith %}
+
+          <div class="flex items-baseline justify-between mb-3">
+            <span class="price-display text-base font-bold text-[#0f2042] font-display">Bs. {{ rel.precio_actual|floatformat:2 }}</span>
+            {% with rel_oferta=rel.get_oferta_activa %}
+              <span class="price-old text-xs text-gray-400 line-through {% if not rel_oferta %}hidden{% endif %}">Bs. {{ rel.precio_base|floatformat:2 }}</span>
+            {% endwith %}
+          </div>
+          
+          <div class="flex gap-2">
+            <button onclick="agregarAlCarrito({{ rel.id }}, '{{ rel.nombre|escapejs }}', {{ rel.precio_actual|floatformat:2 }}, '{% if rel.imagen %}{{ rel.imagen.url }}{% endif %}')"
+                    class="btn-add-cart flex-1 bg-[#2355a0] hover:bg-[#1a3460] text-white font-bold py-2 rounded-xl text-xs transition-colors shadow-sm flex items-center justify-center gap-1"
+                    data-img-url="{% if rel.imagen %}{{ rel.imagen.url }}{% endif %}">
+              <i class="fa-solid fa-plus text-[10px]"></i> Añadir
+            </button>
+            <a href="{% url 'catalogo:detalle' rel.id %}" class="bg-gray-50 hover:bg-gray-100 text-gray-600 font-semibold px-3 py-2 rounded-xl text-xs transition-colors border border-gray-200 text-center flex items-center justify-center flex-grow-0 min-w-[60px]">
+              Ver
+            </a>
           </div>
         </div>
       </div>
@@ -182,7 +238,9 @@
 {% block js_extra %}
 <script>
 let cantidad = 1;
-const stockMax = {{ producto.inventario.stock_actual|default:0 }};
+let offerLimit = {% if oferta_activa and oferta_activa.limite_cantidad is not None %}{{ oferta_activa.limite_cantidad }} - {{ oferta_activa.cantidad_vendida }}{% else %}null{% endif %};
+let stockMax = Math.min({{ producto.inventario.stock_actual|default:0 }}, offerLimit !== null ? Math.max(0, offerLimit) : Infinity);
+let precioFinal = parseFloat("{{ precio_final|floatformat:2 }}".replace(',', '.'));
 
 function cambiarCantidad(delta) {
   cantidad = Math.max(1, Math.min(stockMax, cantidad + delta));
@@ -192,17 +250,15 @@ function cambiarCantidad(delta) {
 function agregarDesdeDetalle() {
   {% if user.is_authenticated %}
     const notas = document.getElementById('notas-producto').value;
-    for (let i = 0; i < cantidad; i++) {
-      Carrito.agregar({
-        id:     {{ producto.id }},
-        nombre: '{{ producto.nombre|escapejs }}',
-        precio: {{ precio_final|floatformat:2 }},
-        imagen: '{% if producto.imagen %}{{ producto.imagen.url }}{% endif %}',
-        notas:  notas
-      });
-    }
+    Carrito.agregar({
+      id:     {{ producto.id }},
+      nombre: '{{ producto.nombre|escapejs }}',
+      precio: precioFinal,
+      imagen: '{% if producto.imagen %}{{ producto.imagen.url }}{% endif %}',
+      notas:  notas
+    }, cantidad);
   {% else %}
-    if(confirm('Debes iniciar sesión. ¿Ir al login?')) {
+    if(confirm('Debes iniciar sesión para agregar productos al pedido. ¿Ir al login?')) {
       window.location.href = "{% url 'usuarios:login' %}?next={{ request.path }}";
     }
   {% endif %}
@@ -212,10 +268,112 @@ function agregarAlCarrito(id, nombre, precio, imagen) {
   {% if user.is_authenticated %}
     Carrito.agregar({ id, nombre, precio, imagen });
   {% else %}
-    if(confirm('Debes iniciar sesión. ¿Ir al login?')) {
+    if(confirm('Debes iniciar sesión para agregar productos al pedido. ¿Ir al login?')) {
       window.location.href = "{% url 'usuarios:login' %}?next={{ request.path }}";
     }
   {% endif %}
 }
+
+// Live Countdown and fallbacks script
+document.addEventListener('DOMContentLoaded', () => {
+    function updateCountdowns() {
+        const now = new Date();
+
+        // 1. Detail page product offer check
+        const container = document.getElementById('product-detail-container');
+        if (container && container.getAttribute('data-has-offer') === 'true') {
+            const endStr = container.getAttribute('data-offer-end');
+            if (endStr) {
+                const endTime = new Date(endStr);
+                const diffMs = endTime - now;
+                
+                const timerSpan = document.getElementById('detail-countdown-timer');
+                const timerContainer = document.getElementById('detail-countdown-container');
+                const badgeOferta = document.getElementById('detail-badge-oferta');
+                const priceOld = document.getElementById('detail-price-old');
+                const discountBadge = document.getElementById('detail-offer-discount-badge');
+                const priceDisplay = document.getElementById('detail-price-display');
+
+                if (diffMs <= 0) {
+                    // Revert details page to normal
+                    container.setAttribute('data-has-offer', 'false');
+                    if (timerContainer) timerContainer.classList.add('hidden');
+                    if (badgeOferta) badgeOferta.classList.add('hidden');
+                    if (priceOld) priceOld.classList.add('hidden');
+                    if (discountBadge) discountBadge.classList.add('hidden');
+                    
+                    const basePrice = parseFloat(container.getAttribute('data-base-price'));
+                    precioFinal = basePrice;
+                    if (priceDisplay) priceDisplay.innerText = `Bs. ${basePrice.toFixed(2)}`;
+                    
+                    // Reset stockMax to ignore offer limit since it reverted to normal price
+                    stockMax = {{ producto.inventario.stock_actual|default:0 }};
+                } else {
+                    const diffSecs = Math.floor(diffMs / 1000);
+                    const secs = diffSecs % 60;
+                    const mins = Math.floor(diffSecs / 60) % 60;
+                    const hours = Math.floor(diffSecs / 3600) % 24;
+                    const days = Math.floor(diffSecs / 86400);
+
+                    let displayStr = '';
+                    if (days > 0) displayStr += `${days}d `;
+                    displayStr += `${hours.toString().padStart(2, '0')}h ${mins.toString().padStart(2, '0')}m ${secs.toString().padStart(2, '0')}s`;
+                    if (timerSpan) timerSpan.innerText = displayStr;
+                }
+            }
+        }
+
+        // 2. Related product cards countdowns
+        const cards = document.querySelectorAll('.product-card');
+        cards.forEach(card => {
+            const hasOffer = card.getAttribute('data-has-offer') === 'true';
+            if (!hasOffer) return;
+
+            const endTimeStr = card.getAttribute('data-offer-end');
+            if (!endTimeStr) return;
+
+            const endTime = new Date(endTimeStr);
+            const diffMs = endTime - now;
+
+            const timerSpan = card.querySelector('.card-countdown-timer');
+            const timerContainer = card.querySelector('.card-countdown-container');
+            const badgeOferta = card.querySelector('.badge-oferta');
+            const priceOld = card.querySelector('.price-old');
+            const priceDisplay = card.querySelector('.price-display');
+            const btnAdd = card.querySelector('.btn-add-cart');
+
+            if (diffMs <= 0) {
+                card.setAttribute('data-has-offer', 'false');
+                if (timerContainer) timerContainer.classList.add('hidden');
+                if (badgeOferta) badgeOferta.classList.add('hidden');
+                if (priceOld) priceOld.classList.add('hidden');
+
+                const basePrice = parseFloat(card.getAttribute('data-base-price')).toFixed(2);
+                if (priceDisplay) priceDisplay.innerText = `Bs. ${basePrice}`;
+
+                if (btnAdd) {
+                    const prodId = card.getAttribute('data-product-id');
+                    const imgUrl = btnAdd.getAttribute('data-img-url') || '';
+                    const prodName = card.querySelector('h3').innerText;
+                    btnAdd.setAttribute('onclick', `agregarAlCarrito(${prodId}, '${prodName.replace(/'/g, "\\'")}', ${basePrice}, '${imgUrl}')`);
+                }
+            } else {
+                const diffSecs = Math.floor(diffMs / 1000);
+                const secs = diffSecs % 60;
+                const mins = Math.floor(diffSecs / 60) % 60;
+                const hours = Math.floor(diffSecs / 3600) % 24;
+                const days = Math.floor(diffSecs / 86400);
+
+                let displayStr = '';
+                if (days > 0) displayStr += `${days}d `;
+                displayStr += `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                if (timerSpan) timerSpan.innerText = displayStr;
+            }
+        });
+    }
+
+    updateCountdowns();
+    setInterval(updateCountdowns, 1000);
+});
 </script>
 {% endblock %}
