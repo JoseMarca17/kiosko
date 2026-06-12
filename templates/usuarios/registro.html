@@ -45,7 +45,7 @@
               <input type="{{ field.field.widget.input_type|default:'text' }}" 
                      name="{{ field.html_name }}" 
                      id="{{ field.id_for_label }}"
-                     required
+                     {% if field.field.required %}required{% endif %}
                      placeholder="Ingresa tu {{ field.label|lower }}..."
                      value="{{ field.value|default:'' }}"
                      class="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-4 py-3 text-xs focus:outline-none focus:border-[#2355a0] focus:bg-white transition-all text-gray-800 placeholder-gray-400">

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.db.models import Sum, Count, Avg, F
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime, time
 import json
 
 from apps.usuarios.decorators import solo_admin
@@ -13,18 +13,24 @@ from apps.pagos.models import Transaccion, QRKiosko
 
 @solo_admin
 def vista_dashboard(request):
-    hoy      = timezone.now().date()
-    hace7    = hoy - timedelta(days=6)
+    local_now = timezone.localtime(timezone.now())
+    hoy_local = local_now.date()
 
-    # Tarjetas de resumen
+    # Tarjetas de resumen (usando rangos exactos de fecha/hora locales)
+    start_of_today = timezone.make_aware(datetime.combine(hoy_local, time.min))
+    end_of_today = timezone.make_aware(datetime.combine(hoy_local, time.max))
+
     ventas_hoy     = Pedido.objects.filter(
-        fecha_pedido__date=hoy,
+        fecha_pedido__gte=start_of_today,
+        fecha_pedido__lte=end_of_today,
         estado__nombre__in=['pagado','preparando','listo','entregado'],
         cancelado=False
     ).aggregate(total=Sum('total'))['total'] or 0
 
     pedidos_hoy    = Pedido.objects.filter(
-        fecha_pedido__date=hoy, cancelado=False
+        fecha_pedido__gte=start_of_today,
+        fecha_pedido__lte=end_of_today,
+        cancelado=False
     ).exclude(estado__nombre='cancelado').count()
 
     pendientes     = Transaccion.objects.filter(estado='pendiente_validacion').count()
@@ -33,13 +39,17 @@ def vista_dashboard(request):
         stock_actual__lte=F('stock_minimo')
     ).count()
 
-    # Gráfica ventas 7 días
+    # Gráfica ventas 7 días (usando rangos exactos de fecha/hora locales)
     ventas_semana  = []
     labels_semana  = []
     for i in range(6, -1, -1):
-        dia   = hoy - timedelta(days=i)
+        dia   = hoy_local - timedelta(days=i)
+        start_of_dia = timezone.make_aware(datetime.combine(dia, time.min))
+        end_of_dia = timezone.make_aware(datetime.combine(dia, time.max))
+        
         total = Pedido.objects.filter(
-            fecha_pedido__date=dia,
+            fecha_pedido__gte=start_of_dia,
+            fecha_pedido__lte=end_of_dia,
             estado__nombre__in=['pagado','preparando','listo','entregado'],
             cancelado=False
         ).aggregate(t=Sum('total'))['t'] or 0
@@ -70,6 +80,7 @@ def vista_dashboard(request):
         'labels_top':              json.dumps([p['producto__nombre'] for p in top_productos]),
         'datos_top':               json.dumps([p['total_vendido'] for p in top_productos]),
         'comprobantes_pendientes': comprobantes_pendientes,
+        'today':                   local_now,
     })
 
 
@@ -167,17 +178,53 @@ def vista_desactivar_producto(request, pk):
 
 @solo_admin
 def vista_pedidos_admin(request):
+    tab = request.GET.get('tab', 'activos')  # activos, completados, rechazados
+    rango_fecha = request.GET.get('fecha', 'todo')  # hoy, semana, mes, todo
     estado_filtro = request.GET.get('estado', '')
+
     pedidos = Pedido.objects.select_related('estado', 'usuario')\
+                            .prefetch_related('detalles__producto', 'transaccion__comprobantes')\
                             .order_by('-fecha_pedido')
+
+    # Filtro por tab
+    if tab == 'activos':
+        pedidos = pedidos.filter(estado__nombre__in=['pendiente_pago', 'pendiente_validacion', 'pagado', 'preparando', 'listo'])
+    elif tab == 'completados':
+        pedidos = pedidos.filter(estado__nombre='entregado')
+    elif tab == 'rechazados':
+        pedidos = pedidos.filter(estado__nombre='cancelado')
+
+    # Filtro por rango de fecha
+    if rango_fecha != 'todo':
+        from datetime import datetime, time
+        local_now = timezone.localtime(timezone.now())
+        if rango_fecha == 'hoy':
+            inicio = timezone.make_aware(datetime.combine(local_now.date(), time.min))
+            pedidos = pedidos.filter(fecha_pedido__gte=inicio)
+        elif rango_fecha == 'semana':
+            inicio = timezone.make_aware(datetime.combine(local_now.date() - timedelta(days=7), time.min))
+            pedidos = pedidos.filter(fecha_pedido__gte=inicio)
+        elif rango_fecha == 'mes':
+            inicio = timezone.make_aware(datetime.combine(local_now.date() - timedelta(days=30), time.min))
+            pedidos = pedidos.filter(fecha_pedido__gte=inicio)
+
     if estado_filtro:
         pedidos = pedidos.filter(estado__nombre=estado_filtro)
+
+    # Calcular estadísticas del período filtrado
+    stats = {
+        'total_pedidos': pedidos.count(),
+        'total_monto':   pedidos.aggregate(total=Sum('total'))['total'] or 0.00,
+    }
 
     estados = EstadoPedido.objects.all()
     return render(request, 'dashboard/pedidos.html', {
         'pedidos':        pedidos,
         'estados':        estados,
         'estado_filtro':  estado_filtro,
+        'tab':            tab,
+        'rango_fecha':    rango_fecha,
+        'stats':          stats,
     })
 
 
@@ -203,18 +250,37 @@ def vista_estadisticas(request):
     ).order_by('-total')
 
     # Ingresos por mes (últimos 6 meses)
-    hoy     = timezone.now().date()
+    from datetime import datetime
+    hoy_local = timezone.localtime(timezone.now()).date()
     meses   = []
     ingresos_mes = []
+    anio = hoy_local.year
+    mes_num = hoy_local.month
+
     for i in range(5, -1, -1):
-        mes   = hoy.replace(day=1) - timedelta(days=i*30)
+        m = mes_num - i
+        y = anio
+        while m <= 0:
+            m += 12
+            y -= 1
+            
+        inicio_mes = timezone.make_aware(datetime(y, m, 1, 0, 0, 0))
+        if m == 12:
+            fin_mes = timezone.make_aware(datetime(y + 1, 1, 1, 0, 0, 0))
+        else:
+            fin_mes = timezone.make_aware(datetime(y, m + 1, 1, 0, 0, 0))
+            
         total = Pedido.objects.filter(
-            fecha_pedido__year=mes.year,
-            fecha_pedido__month=mes.month,
+            fecha_pedido__gte=inicio_mes,
+            fecha_pedido__lt=fin_mes,
             cancelado=False,
             estado__nombre__in=['pagado','preparando','listo','entregado']
         ).aggregate(t=Sum('total'))['t'] or 0
-        meses.append(mes.strftime('%b %Y'))
+        
+        nombres_meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+        label = f"{nombres_meses[m-1]} {y}"
+        
+        meses.append(label)
         ingresos_mes.append(float(total))
 
     return render(request, 'dashboard/estadisticas.html', {
@@ -282,3 +348,51 @@ def vista_desactivar_oferta(request, pk):
     estado = "activada" if oferta.activo else "desactivada"
     messages.success(request, f'La oferta del producto "{oferta.producto.nombre}" fue {estado}.')
     return redirect('dashboard:ofertas')
+
+
+@solo_admin
+def vista_rechazar_pedido_admin(request, pedido_id):
+    if request.method == 'POST':
+        pedido = get_object_or_404(Pedido, pk=pedido_id)
+        if pedido.estado.nombre == 'entregado':
+            return JsonResponse({'error': 'No se puede rechazar un pedido ya entregado.'}, status=400)
+
+        data = {}
+        try:
+            if request.body:
+                data = json.loads(request.body)
+        except Exception:
+            pass
+
+        motivo = data.get('motivo') or request.POST.get('motivo') or 'Rechazado por el administrador'
+        
+        from django.db import transaction
+        with transaction.atomic():
+            pedido.cancelado = True
+            pedido.fecha_cancelacion = timezone.now()
+            pedido.motivo_cancelacion = motivo
+            pedido.estado = EstadoPedido.objects.get(nombre='cancelado')
+            pedido.save()
+            
+            # Revertir stock e incremento de ofertas asociadas
+            for detalle in pedido.detalles.all():
+                inv = detalle.producto.inventario
+                inv.stock_actual += detalle.cantidad
+                inv.save()
+                
+                if detalle.oferta:
+                    o = detalle.oferta
+                    o.cantidad_vendida = max(o.cantidad_vendida - detalle.cantidad, 0)
+                    o.save()
+            
+            # Rechazar transacciones asociadas
+            if hasattr(pedido, 'transaccion'):
+                t = pedido.transaccion
+                t.estado = 'rechazado'
+                t.validado_por = request.user
+                t.fecha_validacion = timezone.now()
+                t.notas_validacion = motivo
+                t.save()
+                
+        return JsonResponse({'ok': True, 'mensaje': 'Pedido rechazado/cancelado con éxito.'})
+    return JsonResponse({'error': 'Método no permitido'}, status=405)

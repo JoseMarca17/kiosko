@@ -85,6 +85,25 @@
   </div>
 </nav>
 
+{% if pedidos_pendientes_pago %}
+  <div class="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white py-2 px-4 shadow-lg sticky top-16 z-30 border-b border-amber-400">
+    <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2 text-xs">
+      <div class="flex items-center gap-2 font-bold font-display">
+        <i class="fa-solid fa-credit-card text-sm text-amber-100 animate-pulse"></i>
+        <span>Tienes un pedido pendiente de pago (<strong>{{ pedidos_pendientes_pago.0.codigo_pedido }}</strong> por <strong>Bs. {{ pedidos_pendientes_pago.0.total }}</strong>). ¡Realiza tu pago para iniciar su preparación!</span>
+      </div>
+      <div class="flex gap-2">
+        <a href="{% url 'pagos:pagar' pedidos_pendientes_pago.0.id %}" class="bg-white hover:bg-amber-50 text-amber-950 font-black px-4 py-1.5 rounded-xl text-[10px] uppercase tracking-wider transition-all flex items-center gap-1 shadow-sm">
+          Pagar ahora <i class="fa-solid fa-chevron-right text-[8px]"></i>
+        </a>
+        <a href="{% url 'pedidos:detalle' pedidos_pendientes_pago.0.id %}" class="bg-amber-700/40 hover:bg-amber-700/60 text-white font-bold px-4 py-1.5 rounded-xl text-[10px] uppercase tracking-wider transition-all border border-amber-300/30">
+          Ver detalles
+        </a>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
 {% block mensajes %}
 {% if messages %}
   <div class="max-w-4xl mx-auto w-full px-4 mt-4 space-y-2 relative z-50">
@@ -122,6 +141,45 @@
       <i class="fa-solid fa-clock-rotate-left"></i> Ver mis pedidos
     </a>
   </div>
+  
+  {% if pedidos_pendientes_pago or pedidos_pendientes_validacion %}
+  <div class="bg-amber-50/80 border-b border-amber-100 p-4 space-y-2.5">
+    <div class="flex items-start gap-2">
+      <div class="p-1 bg-amber-500 text-white rounded text-[10px] mt-0.5">
+        <i class="fa-solid fa-bell animate-bounce"></i>
+      </div>
+      <div>
+        <h4 class="text-xs font-bold text-amber-900 leading-tight">Pedidos por pagar</h4>
+        <p class="text-[10px] text-amber-700 mt-0.5 leading-normal">Tienes órdenes activas esperando pago o validación.</p>
+      </div>
+    </div>
+    <div class="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
+      {% for pedido in pedidos_pendientes_pago %}
+      <div class="bg-white border border-amber-200 rounded-xl p-2.5 shadow-sm flex items-center justify-between text-xs">
+        <div class="min-w-0 flex-1 pr-2">
+          <span class="font-bold text-gray-700 block text-[10px] truncate">{{ pedido.codigo_pedido }}</span>
+          <span class="text-amber-600 font-black text-[11px]">Bs. {{ pedido.total|floatformat:2 }}</span>
+        </div>
+        <div class="flex gap-1 flex-shrink-0">
+          <a href="{% url 'pagos:pagar' pedido.id %}" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-2 py-1 rounded-lg text-[9px] uppercase tracking-wider transition-colors shadow-sm">Pagar</a>
+          <a href="{% url 'pedidos:detalle' pedido.id %}" class="bg-gray-100 hover:bg-gray-200 text-gray-600 border border-gray-200 font-bold px-2 py-1 rounded-lg text-[9px] uppercase tracking-wider transition-colors">Ver</a>
+        </div>
+      </div>
+      {% endfor %}
+      
+      {% for pedido in pedidos_pendientes_validacion %}
+      <div class="bg-white border border-blue-200 rounded-xl p-2.5 shadow-sm flex items-center justify-between text-xs">
+        <div class="min-w-0 flex-1 pr-2">
+          <span class="font-bold text-gray-700 block text-[10px] truncate">{{ pedido.codigo_pedido }}</span>
+          <span class="text-blue-600 font-bold text-[9px] uppercase tracking-wider">En validación</span>
+        </div>
+        <a href="{% url 'pedidos:detalle' pedido.id %}" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold px-2 py-1 rounded-lg text-[9px] uppercase tracking-wider transition-colors flex-shrink-0">Detalle</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
   <div id="cart-items" class="flex-grow overflow-y-auto p-5 space-y-4">
     <div class="text-center py-20 text-gray-400 opacity-60">
       <i class="fa-solid fa-box-open text-4xl mb-3 block"></i>

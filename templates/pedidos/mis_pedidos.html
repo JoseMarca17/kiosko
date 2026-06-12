@@ -1,87 +1,146 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block titulo %}Mis Pedidos — KioskoEMI{% endblock %}
 
 {% block content %}
-<div class="container page-content">
-  <h1 class="section-title fade-up fade-up-1"><i class="fa-solid fa-receipt text-emi-gold"></i> Mis Pedidos</h1>
-  <p class="section-sub fade-up fade-up-1">Seguimiento de todos tus pedidos</p>
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
 
+  <!-- Breadcrumb / Regresar -->
+  <nav class="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+    <a href="{% url 'catalogo:index' %}" class="text-blue-600 hover:text-blue-800 transition-colors">Inicio</a>
+    <span><i class="fa-solid fa-chevron-right text-[8px]"></i></span>
+    <span class="text-gray-600 font-bold">Mis Pedidos</span>
+  </nav>
+
+  <!-- Encabezado Principal -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-6">
+    <div>
+      <h1 class="text-2xl font-black font-display text-emi-900 tracking-tight flex items-center gap-3">
+        <span class="p-2 bg-emi-gold/10 text-emi-gold rounded-xl text-sm w-9 h-9 flex items-center justify-center">
+          <i class="fa-solid fa-receipt"></i>
+        </span>
+        Mis Pedidos
+      </h1>
+      <p class="text-xs text-gray-400 mt-1 font-medium">Historial y seguimiento en tiempo real de tus órdenes.</p>
+    </div>
+    {% if pedidos %}
+    <span class="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-full border border-blue-100 self-start sm:self-auto">
+      {{ pedidos|length }} pedido(s) registrado(s)
+    </span>
+    {% endif %}
+  </div>
+
+  <!-- Contenedor de Pedidos -->
   {% if pedidos %}
-  <div style="display:flex;flex-direction:column;gap:1rem;" class="fade-up fade-up-2">
+  <div class="space-y-4">
     {% for pedido in pedidos %}
-    <div class="card" style="transition:box-shadow .2s;"
-         onmouseover="this.style.boxShadow='var(--shadow-md)'"
-         onmouseout="this.style.boxShadow=''">
-       <div style="padding:1.25rem 1.5rem;display:flex;align-items:center;
-                  justify-content:space-between;flex-wrap:wrap;gap:1rem;">
-        <div style="display:flex;align-items:center;gap:1.25rem;">
-          <!-- Icono estado -->
-          <div style="width:48px;height:48px;border-radius:var(--radius-md);
-                      background:var(--blue-50);display:flex;align-items:center;
-                      justify-content:center;font-size:1.2rem;flex-shrink:0;">
-            {% if pedido.estado.nombre == 'pendiente_pago' %}<i class="fa-solid fa-credit-card text-amber-500"></i>
-            {% elif pedido.estado.nombre == 'pendiente_validacion' %}<i class="fa-solid fa-hourglass-half text-amber-600"></i>
-            {% elif pedido.estado.nombre == 'pagado' %}<i class="fa-solid fa-circle-check text-green-600"></i>
-            {% elif pedido.estado.nombre == 'preparando' %}<i class="fa-solid fa-kitchen-set text-blue-600"></i>
-            {% elif pedido.estado.nombre == 'listo' %}<i class="fa-solid fa-bell text-teal-600"></i>
-            {% elif pedido.estado.nombre == 'entregado' %}<i class="fa-solid fa-circle-user text-purple-600"></i>
-            {% else %}<i class="fa-solid fa-circle-xmark text-red-600"></i>{% endif %}
+    <div class="bg-white border border-gray-100 rounded-3xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all border-l-4 
+      {% if pedido.estado.nombre == 'pendiente_pago' %} border-l-amber-300
+      {% elif pedido.estado.nombre == 'pendiente_validacion' %} border-l-orange-500
+      {% elif pedido.estado.nombre == 'pagado' %} border-l-teal-500
+      {% elif pedido.estado.nombre == 'preparando' %} border-l-blue-500 
+      {% elif pedido.estado.nombre == 'listo' %} border-l-emi-gold 
+      {% elif pedido.estado.nombre == 'entregado' %} border-l-emerald-500 
+      {% else %} border-l-red-500 {% endif %}">
+      
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <!-- Detalles Principales del Pedido -->
+        <div class="flex items-start gap-4">
+          <!-- Icono de Estado Circular -->
+          <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg flex-shrink-0 shadow-inner
+            {% if pedido.estado.nombre == 'pendiente_pago' %} bg-amber-50 text-amber-500
+            {% elif pedido.estado.nombre == 'pendiente_validacion' %} bg-orange-50 text-orange-500
+            {% elif pedido.estado.nombre == 'pagado' %} bg-teal-50 text-teal-600
+            {% elif pedido.estado.nombre == 'preparando' %} bg-blue-50 text-blue-600
+            {% elif pedido.estado.nombre == 'listo' %} bg-amber-100 text-amber-600 animate-pulse
+            {% elif pedido.estado.nombre == 'entregado' %} bg-emerald-50 text-emerald-600
+            {% else %} bg-red-50 text-red-500 {% endif %}">
+            
+            {% if pedido.estado.nombre == 'pendiente_pago' %}<i class="fa-solid fa-credit-card"></i>
+            {% elif pedido.estado.nombre == 'pendiente_validacion' %}<i class="fa-solid fa-hourglass-half"></i>
+            {% elif pedido.estado.nombre == 'pagado' %}<i class="fa-solid fa-circle-check"></i>
+            {% elif pedido.estado.nombre == 'preparando' %}<i class="fa-solid fa-kitchen-set"></i>
+            {% elif pedido.estado.nombre == 'listo' %}<i class="fa-solid fa-box"></i>
+            {% elif pedido.estado.nombre == 'entregado' %}<i class="fa-solid fa-circle-check"></i>
+            {% else %}<i class="fa-solid fa-ban"></i>{% endif %}
           </div>
-          <div>
-            <div style="font-family:var(--font-display);font-weight:700;
-                        color:var(--blue-900);letter-spacing:.03em;">
-              {{ pedido.codigo_pedido }}
+          
+          <div class="space-y-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="font-black text-sm text-emi-900 tracking-tight">{{ pedido.codigo_pedido }}</span>
+              <span class="px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border
+                {% if pedido.estado.nombre == 'pendiente_pago' %} bg-amber-50 text-amber-700 border-amber-200
+                {% elif pedido.estado.nombre == 'pendiente_validacion' %} bg-orange-50 text-orange-700 border-orange-200
+                {% elif pedido.estado.nombre == 'pagado' %} bg-teal-50 text-teal-700 border-teal-200
+                {% elif pedido.estado.nombre == 'preparando' %} bg-blue-50 text-blue-700 border-blue-100
+                {% elif pedido.estado.nombre == 'listo' %} bg-amber-100 text-amber-800 border-amber-300
+                {% elif pedido.estado.nombre == 'entregado' %} bg-emerald-50 text-emerald-700 border-emerald-100
+                {% else %} bg-red-50 text-red-700 border-red-200 {% endif %}">
+                {{ pedido.estado.display_nombre }}
+              </span>
             </div>
-            <div style="font-size:.8rem;color:var(--color-text-muted);margin-top:.15rem;">
-              {{ pedido.fecha_pedido|date:"d/m/Y H:i" }}
+            <p class="text-xs text-gray-400 font-medium">Realizado el {{ pedido.fecha_pedido|date:"d \de M, Y — H:i" }}</p>
+            
+            <!-- Resumen de productos en el card -->
+            <div class="flex flex-wrap gap-1.5 pt-1.5">
+              {% for item in pedido.detalles.all %}
+                <span class="text-[9px] bg-gray-50 text-gray-500 px-2 py-0.5 rounded-md border border-gray-100">
+                  {{ item.cantidad }}x {{ item.producto.nombre }}
+                </span>
+              {% endfor %}
             </div>
           </div>
         </div>
 
-        <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
-          <span class="badge
-            {% if pedido.estado.nombre == 'pendiente_pago' %}badge-warning
-            {% elif pedido.estado.nombre == 'pendiente_validacion' %}badge-warning
-            {% elif pedido.estado.nombre == 'pagado' %}badge-info
-            {% elif pedido.estado.nombre == 'preparando' %}badge-info
-            {% elif pedido.estado.nombre == 'listo' %}badge-success
-            {% elif pedido.estado.nombre == 'entregado' %}badge-primary
-            {% else %}badge-danger{% endif %}">
-            {{ pedido.estado.nombre|title|replace:"_":" " }}
-          </span>
-
-          <span style="font-family:var(--font-display);font-weight:800;
-                       font-size:1.2rem;color:var(--color-accent);">
-            Bs. {{ pedido.total|floatformat:2 }}
-          </span>
-
-          <div style="display:flex;gap:.5rem;">
-            <a href="{% url 'pedidos:detalle' pedido.id %}" class="btn btn-outline btn-sm">
+        <!-- Precios y Acciones del Pedido -->
+        <div class="flex items-center justify-between md:justify-end gap-6 border-t md:border-t-0 pt-4 md:pt-0 border-gray-50">
+          <div class="text-left md:text-right">
+            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest block">Monto Total</span>
+            <span class="text-base font-black text-emi-900 font-display">Bs. {{ pedido.total|floatformat:2 }}</span>
+          </div>
+          
+          <div class="flex gap-2">
+            <a href="{% url 'pedidos:detalle' pedido.id %}" class="bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 font-bold px-4 py-2.5 rounded-xl text-[10px] uppercase tracking-wider transition-all shadow-sm">
               Ver detalle
             </a>
             {% if pedido.estado.nombre == 'pendiente_pago' %}
-            <a href="{% url 'pagos:pagar' pedido.id %}" class="btn btn-accent btn-sm">
-              Pagar
-            </a>
+              <a href="{% url 'pagos:pagar' pedido.id %}" class="bg-emi-gold hover:bg-emi-goldHover text-emi-950 font-bold px-4 py-2.5 rounded-xl text-[10px] uppercase tracking-wider transition-all shadow-md shadow-emi-gold/10">
+                Pagar
+              </a>
             {% endif %}
           </div>
         </div>
       </div>
+
+      <!-- Banner de Rechazo/Cancelación con el motivo real -->
+      {% if pedido.cancelado or pedido.estado.nombre == 'cancelado' %}
+        <div class="mt-4 bg-red-50 border border-red-100 rounded-2xl p-4 text-xs text-red-800 flex gap-3 items-start animate-fade-in">
+          <div class="w-7 h-7 rounded-lg bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0 text-sm mt-0.5">
+            <i class="fa-solid fa-circle-xmark"></i>
+          </div>
+          <div class="space-y-1">
+            <p class="font-black uppercase tracking-wider text-[10px] text-red-900">Pedido Cancelado / Pago Rechazado</p>
+            <p class="text-red-700 leading-relaxed font-medium">
+              <strong class="text-red-900">Motivo del rechazo:</strong> "{{ pedido.motivo_cancelacion|default:"No especificado por el administrador." }}"
+            </p>
+          </div>
+        </div>
+      {% endif %}
+
     </div>
     {% endfor %}
   </div>
 
   {% else %}
-  <div style="text-align:center;padding:5rem 2rem;" class="fade-up fade-up-2">
-    <div style="font-size:4rem;margin-bottom:1.5rem;color:var(--color-text-muted);"><i class="fa-solid fa-folder-open"></i></div>
-    <h3 style="font-family:var(--font-display);color:var(--blue-900);margin-bottom:.5rem;">
-      Aún no tienes pedidos
-    </h3>
-    <p style="color:var(--color-text-muted);margin-bottom:1.5rem;">
-      ¡Haz tu primer pedido ahora!
-    </p>
-    <a href="{% url 'catalogo:catalogo' %}" class="btn btn-primary btn-lg">
-      Ver catálogo
+  <!-- Estado de Sin Pedidos -->
+  <div class="text-center py-20 bg-white border border-gray-100 rounded-[2.5rem] shadow-sm">
+    <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+      <i class="fa-solid fa-folder-open text-2xl text-gray-200"></i>
+    </div>
+    <h3 class="font-display font-bold text-[#0f2042]">Aún no tienes pedidos</h3>
+    <p class="text-xs text-gray-400 mt-1">Tu historial está vacío. ¡Haz tu primer pedido del menú hoy mismo!</p>
+    <a href="{% url 'catalogo:catalogo' %}" class="mt-6 inline-flex items-center gap-2 bg-emi-gold hover:bg-emi-goldHover text-emi-950 font-bold py-3.5 px-6 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-emi-gold/20">
+      Ver Catálogo <i class="fa-solid fa-chevron-right text-[8px]"></i>
     </a>
   </div>
   {% endif %}

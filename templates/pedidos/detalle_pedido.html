@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block titulo %}Detalle Pedido {{ pedido.codigo_pedido }} — KioskoEMI{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+
+  <!-- Breadcrumb -->
+  <nav class="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+    <a href="{% url 'catalogo:index' %}" class="text-blue-600 hover:text-blue-800 transition-colors">Inicio</a>
+    <span><i class="fa-solid fa-chevron-right text-[8px]"></i></span>
+    <a href="{% url 'pedidos:mis_pedidos' %}" class="text-blue-600 hover:text-blue-800 transition-colors">Mis Pedidos</a>
+    <span><i class="fa-solid fa-chevron-right text-[8px]"></i></span>
+    <span class="text-gray-600 font-bold">{{ pedido.codigo_pedido }}</span>
+  </nav>
+
+  <!-- Encabezado del Pedido -->
+  <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div class="space-y-2">
+      <div class="flex items-center gap-3 flex-wrap">
+        <h1 class="text-2xl font-black font-display text-emi-900 tracking-tight">{{ pedido.codigo_pedido }}</h1>
+        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border
+          {% if pedido.estado.nombre == 'pendiente_pago' %} bg-amber-50 text-amber-700 border-amber-200
+          {% elif pedido.estado.nombre == 'pendiente_validacion' %} bg-blue-50 text-blue-700 border-blue-200
+          {% elif pedido.estado.nombre == 'pagado' %} bg-teal-50 text-teal-700 border-teal-200
+          {% elif pedido.estado.nombre == 'preparando' %} bg-indigo-50 text-indigo-700 border-indigo-200
+          {% elif pedido.estado.nombre == 'listo' %} bg-amber-100 text-amber-800 border-amber-300 animate-pulse
+          {% elif pedido.estado.nombre == 'entregado' %} bg-emerald-50 text-emerald-700 border-emerald-200
+          {% else %} bg-red-50 text-red-700 border-red-200 {% endif %}">
+          {{ pedido.estado.display_nombre }}
+        </span>
+      </div>
+      <p class="text-xs text-gray-400 font-medium">
+        Realizado el {{ pedido.fecha_pedido|date:"d \de F, Y \a \l\a\s H:i" }}
+      </p>
+    </div>
+
+    <div class="text-left md:text-right">
+      {% if pedido.cancelado %}
+        <span class="text-[10px] font-bold text-red-500 uppercase tracking-widest block">Pedido Cancelado</span>
+        <span class="text-xs text-gray-400 mt-1 block">Motivo: {{ pedido.motivo_cancelacion|default:"No especificado" }}</span>
+      {% else %}
+        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Estimación de Entrega</span>
+        <span class="text-sm font-black text-emi-900 mt-1 block">
+          {{ pedido.fecha_estimada_retiro|date:"H:i" }} (Aprox. 20 min)
+        </span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- Detalle de Productos -->
+    <div class="lg:col-span-2 space-y-6">
+      <div class="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
+        <div class="bg-emi-900 px-6 py-4 border-b border-emi-800 text-white flex items-center gap-2">
+          <i class="fa-solid fa-list-check text-emi-gold"></i>
+          <h3 class="font-display font-bold text-sm">Resumen de la Orden</h3>
+        </div>
+
+        <div class="p-6 divide-y divide-gray-100 space-y-4">
+          {% for detalle in detalles %}
+          <div class="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
+            <div class="w-14 h-14 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
+              {% if detalle.producto.imagen %}
+                <img src="{{ detalle.producto.imagen.url }}" class="w-full h-full object-cover">
+              {% else %}
+                <i class="fa-solid fa-burger text-gray-300 text-xl"></i>
+              {% endif %}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-bold text-sm text-gray-800 truncate leading-tight">{{ detalle.producto.nombre }}</div>
+              <div class="text-[10px] text-gray-400 font-bold mt-1 uppercase tracking-wider">Cantidad: {{ detalle.cantidad }}</div>
+              {% if detalle.notas %}
+                <div class="text-[10px] text-gray-400 italic mt-0.5 truncate">Detalle: {{ detalle.notas }}</div>
+              {% endif %}
+            </div>
+            <div class="font-display font-black text-sm text-emi-900 whitespace-nowrap">
+              Bs. {{ detalle.subtotal|floatformat:2 }}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="bg-gray-50 border-t border-gray-100 px-6 py-5 flex justify-between items-center">
+          <div>
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Total Pagado</span>
+          </div>
+          <span class="text-2xl font-black text-emi-900 font-display tracking-tight">
+            Bs. {{ pedido.total|floatformat:2 }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Notas especiales del cliente -->
+      {% if pedido.notas_especiales %}
+      <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-2">
+        <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Instrucciones Especiales</h4>
+        <p class="text-xs text-gray-700 bg-gray-50 rounded-2xl p-4 border border-gray-100 italic">
+          "{{ pedido.notas_especiales }}"
+        </p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Estado de Pago & Acciones -->
+    <div class="space-y-6">
+      
+      <!-- Card Pago / Validacion -->
+      <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-4">
+        <h3 class="font-display font-bold text-sm text-emi-900 flex items-center gap-2 border-b border-gray-100 pb-3">
+          <i class="fa-solid fa-wallet text-emi-gold"></i> Información del Pago
+        </h3>
+
+        {% if pedido.estado.nombre == 'pendiente_pago' %}
+          <div class="space-y-4">
+            <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-800 leading-relaxed">
+              <i class="fa-solid fa-triangle-exclamation text-amber-600 mr-1"></i>
+              Aún no se ha registrado el comprobante de pago para este pedido.
+            </div>
+            <a href="{% url 'pagos:pagar' pedido.id %}" class="w-full bg-[#f5a623] hover:bg-[#f7bc52] text-[#0a1628] font-bold py-3.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-lg shadow-[#f5a623]/10 text-center block">
+              Registrar Pago ahora
+            </a>
+          </div>
+        {% elif pedido.estado.nombre == 'pendiente_validacion' %}
+          <div class="space-y-4">
+            <div class="p-3 bg-blue-50 border border-blue-200 rounded-2xl text-xs text-blue-800 leading-relaxed">
+              <i class="fa-solid fa-clock text-blue-500 mr-1 animate-spin"></i>
+              Comprobante de pago enviado. Esperando validación del personal del kiosko.
+            </div>
+            {% if pedido.transaccion.comprobantes.all %}
+              <div class="border border-gray-100 rounded-2xl overflow-hidden bg-gray-50">
+                <img src="{{ pedido.transaccion.comprobantes.first.imagen.url }}" alt="Comprobante de pago" class="w-full h-auto object-contain max-h-[160px] mx-auto">
+              </div>
+            {% endif %}
+          </div>
+        {% else %}
+          <div class="space-y-3">
+            <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-800 leading-relaxed">
+              <i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>
+              Pago aprobado y validado.
+            </div>
+            {% if pedido.transaccion %}
+              <div class="text-[11px] text-gray-500 space-y-1">
+                <p><strong>Monto validado:</strong> Bs. {{ pedido.transaccion.monto }}</p>
+                <p><strong>Fecha:</strong> {{ pedido.transaccion.fecha_validacion|date:"d/m/Y H:i" }}</p>
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Cancelación del pedido (Solo si no está pagado o validado) -->
+      {% if not pedido.cancelado and pedido.estado.nombre in 'pendiente_pago,pendiente_validacion' %}
+      <div class="bg-red-50 border border-red-100 rounded-3xl p-6 shadow-sm space-y-4">
+        <h4 class="text-xs font-bold text-red-900 flex items-center gap-1.5"><i class="fa-solid fa-circle-minus text-red-500"></i> ¿Deseas cancelar la orden?</h4>
+        <p class="text-[11px] text-red-700 leading-normal">
+          Puedes cancelar tu pedido si aún no ha comenzado la preparación. Se liberará el stock reservado.
+        </p>
+        <form method="POST" action="{% url 'pedidos:cancelar' pedido.id %}" onsubmit="return confirm('¿Seguro que deseas cancelar esta orden de comida?')">
+          {% csrf_token %}
+          <input type="hidden" name="motivo" value="Cancelado voluntariamente por el estudiante/usuario">
+          <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-lg shadow-red-600/10">
+            Cancelar Pedido
+          </button>
+        </form>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

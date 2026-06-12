@@ -13,6 +13,10 @@ class EstadoPedido(models.Model):
     def __str__(self):
         return self.nombre
 
+    @property
+    def display_nombre(self):
+        return self.nombre.replace('_', ' ').title()
+
 
 class Pedido(models.Model):
     id                     = models.AutoField(primary_key=True, db_column='id_pedido')
@@ -39,9 +43,13 @@ class Pedido(models.Model):
     def save(self, *args, **kwargs):
         if not self.codigo_pedido:
             from django.utils import timezone
-            hoy = timezone.now().date()
-            count = Pedido.objects.filter(fecha_pedido__date=hoy).count() + 1
-            self.codigo_pedido = f"PED-{hoy.strftime('%Y%m%d')}-{str(count).zfill(4)}"
+            from datetime import datetime, time
+            local_now = timezone.localtime(timezone.now())
+            local_date = local_now.date()
+            start_of_day = timezone.make_aware(datetime.combine(local_date, time.min))
+            end_of_day = timezone.make_aware(datetime.combine(local_date, time.max))
+            count = Pedido.objects.filter(fecha_pedido__gte=start_of_day, fecha_pedido__lte=end_of_day).count() + 1
+            self.codigo_pedido = f"PED-{local_date.strftime('%Y%m%d')}-{str(count).zfill(4)}"
         super().save(*args, **kwargs)
 
 

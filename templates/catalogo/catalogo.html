@@ -74,7 +74,7 @@
            {% if oferta %}
              data-has-offer="true"
              data-offer-price="{{ producto.precio_actual|floatformat:2 }}"
-             data-offer-end="{{ oferta.fecha_fin|date:'c' }}"
+             data-offer-end="{{ oferta.fecha_fin|date:'U' }}"
            {% else %}
              data-has-offer="false"
            {% endif %}
@@ -115,7 +115,7 @@
         {% with oferta=producto.get_oferta_activa %}
         <div class="card-countdown-container mb-2 text-[10px] text-red-600 font-bold bg-red-50/50 rounded-lg px-2 py-1 flex items-center justify-between {% if not oferta %}hidden{% endif %}">
           <span><i class="fa-solid fa-clock mr-0.5"></i> Cierra:</span>
-          <span class="card-countdown-timer font-black tracking-tight" data-end="{% if oferta %}{{ oferta.fecha_fin|date:'c' }}{% endif %}">--:--:--</span>
+          <span class="card-countdown-timer font-black tracking-tight" data-end="{% if oferta %}{{ oferta.fecha_fin|date:'U' }}{% endif %}">--:--:--</span>
         </div>
         {% endwith %}
 
@@ -173,10 +173,8 @@ function agregarAlCarrito(id, nombre, precio, imagen) {
   {% endif %}
 }
 
-// Live Countdown and fallbacks script
-document.addEventListener('DOMContentLoaded', () => {
-    function updateCountdowns() {
-        const now = new Date();
+function updateCountdowns() {
+    const now = new Date();
 
         // Individual card countdowns and fallbacks
         const cards = document.querySelectorAll('.product-card');
@@ -184,10 +182,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const hasOffer = card.getAttribute('data-has-offer') === 'true';
             if (!hasOffer) return;
 
-            const endTimeStr = card.getAttribute('data-offer-end');
-            if (!endTimeStr) return;
+            const endVal = card.getAttribute('data-offer-end');
+            if (!endVal) return;
 
-            const endTime = new Date(endTimeStr);
+            let endTime;
+            const cleanVal = endVal.trim().replace(/[\.,\s]/g, '');
+            if (/^\d+$/.test(cleanVal)) {
+                endTime = new Date(parseInt(cleanVal) * 1000);
+            } else {
+                endTime = new Date(endVal);
+            }
             const diffMs = endTime - now;
 
             const timerSpan = card.querySelector('.card-countdown-timer');
@@ -227,10 +231,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (timerSpan) timerSpan.innerText = displayStr;
             }
         });
-    }
+}
 
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        updateCountdowns();
+        setInterval(updateCountdowns, 1000);
+    });
+} else {
     updateCountdowns();
     setInterval(updateCountdowns, 1000);
-});
+}
 </script>
 {% endblock %}

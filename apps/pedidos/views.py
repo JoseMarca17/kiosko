@@ -116,7 +116,10 @@ def vista_mis_pedidos(request):
 
 @login_required
 def vista_detalle_pedido(request, pk):
-    pedido   = get_object_or_404(Pedido, pk=pk, usuario=request.user)
+    if request.user.es_admin or request.user.es_staff_kiosko:
+        pedido = get_object_or_404(Pedido, pk=pk)
+    else:
+        pedido = get_object_or_404(Pedido, pk=pk, usuario=request.user)
     detalles = pedido.detalles.select_related('producto').all()
     return render(request, 'pedidos/detalle_pedido.html', {
         'pedido':   pedido,

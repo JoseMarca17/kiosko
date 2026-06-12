@@ -27,16 +27,56 @@
     {% endif %}
     
     <!-- Encabezado con Filtros Reales -->
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-gray-100 pb-6">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-100 pb-6">
       <div>
         <h1 class="text-2xl font-black font-display text-[#0f2042] tracking-tight">Monitor de Pedidos</h1>
         <p class="text-xs text-gray-400 mt-1 font-medium">Control operativo de la cola de producción y despacho express.</p>
       </div>
+    </div>
 
-      <!-- Formulario de Filtrado por Estado -->
-      <form method="GET" class="flex items-center gap-2">
+    <!-- Navegación por Pestañas (Tabs) -->
+    <div class="flex border-b border-gray-200">
+      <a href="?tab=activos&fecha={{ rango_fecha }}" class="px-6 py-3 border-b-2 font-display text-xs font-black tracking-wider uppercase transition-all {% if tab == 'activos' %}border-[#2355a0] text-[#2355a0]{% else %}border-transparent text-gray-400 hover:text-gray-600{% endif %}">
+        Pedidos Activos {% if tab == 'activos' %}<span class="ml-1 bg-blue-100 text-[#2355a0] text-[10px] px-2 py-0.5 rounded-full font-bold">{{ stats.total_pedidos }}</span>{% endif %}
+      </a>
+      <a href="?tab=completados&fecha={{ rango_fecha }}" class="px-6 py-3 border-b-2 font-display text-xs font-black tracking-wider uppercase transition-all {% if tab == 'completados' %}border-emerald-500 text-emerald-600{% else %}border-transparent text-gray-400 hover:text-gray-600{% endif %}">
+        Pagos Aceptados {% if tab == 'completados' %}<span class="ml-1 bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-full font-bold">{{ stats.total_pedidos }}</span>{% endif %}
+      </a>
+      <a href="?tab=rechazados&fecha={{ rango_fecha }}" class="px-6 py-3 border-b-2 font-display text-xs font-black tracking-wider uppercase transition-all {% if tab == 'rechazados' %}border-red-500 text-red-600{% else %}border-transparent text-gray-400 hover:text-gray-600{% endif %}">
+        Rechazados / Cancelados {% if tab == 'rechazados' %}<span class="ml-1 bg-red-100 text-red-700 text-[10px] px-2 py-0.5 rounded-full font-bold">{{ stats.total_pedidos }}</span>{% endif %}
+      </a>
+    </div>
+
+    <!-- Filtros de Rango de Fechas & Estadísticas -->
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4 bg-white border border-gray-100 rounded-3xl p-5 shadow-sm">
+      <!-- Estadísticas Rápidas -->
+      <div class="flex items-center gap-6">
+        <div class="space-y-1">
+          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Total Pedidos</span>
+          <span class="text-lg font-black text-[#0f2042] font-display">{{ stats.total_pedidos }}</span>
+        </div>
+        <div class="w-[1px] h-8 bg-gray-100"></div>
+        <div class="space-y-1">
+          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Monto Acumulado</span>
+          <span class="text-lg font-black text-emerald-600 font-display">Bs. {{ stats.total_monto|floatformat:2 }}</span>
+        </div>
+      </div>
+
+      <!-- Formulario de Filtros -->
+      <form method="GET" class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+        <input type="hidden" name="tab" value="{{ tab }}">
+        
+        <select name="fecha" onchange="this.form.submit()" 
+                class="bg-gray-50 border border-gray-200 text-gray-700 text-[11px] font-bold py-2.5 px-4 rounded-xl focus:outline-none focus:border-emi-600 shadow-sm transition-all uppercase tracking-wider">
+          <option value="todo" {% if rango_fecha == 'todo' %}selected{% endif %}>Todo el tiempo</option>
+          <option value="hoy" {% if rango_fecha == 'hoy' %}selected{% endif %}>Hoy</option>
+          <option value="semana" {% if rango_fecha == 'semana' %}selected{% endif %}>Esta Semana</option>
+          <option value="mes" {% if rango_fecha == 'mes' %}selected{% endif %}>Este Mes</option>
+        </select>
+
+        {% if tab == 'activos' %}
         <select name="estado" onchange="this.form.submit()" 
-                class="bg-white border border-gray-200 text-gray-700 text-[11px] font-bold py-2.5 px-4 rounded-xl focus:outline-none focus:border-emi-600 shadow-sm transition-all uppercase tracking-wider">
+                class="bg-gray-50 border border-gray-200 text-gray-700 text-[11px] font-bold py-2.5 px-4 rounded-xl focus:outline-none focus:border-emi-600 shadow-sm transition-all uppercase tracking-wider">
           <option value="">Todos los estados</option>
           {% for est in estados %}
             <option value="{{ est.nombre }}" {% if estado_filtro == est.nombre %}selected{% endif %}>
@@ -44,9 +84,11 @@
             </option>
           {% endfor %}
         </select>
-        {% if estado_filtro %}
-          <a href="{% url 'dashboard:pedidos' %}" class="p-2.5 text-gray-400 hover:text-red-500 bg-white border border-gray-200 rounded-xl transition-colors">
-            <i class="fa-solid fa-circle-xmark"></i>
+        {% endif %}
+
+        {% if estado_filtro or rango_fecha != 'todo' %}
+          <a href="?tab={{ tab }}" class="p-2.5 text-gray-400 hover:text-red-500 bg-white border border-gray-200 rounded-xl transition-colors" title="Limpiar filtros">
+            <i class="fa-solid fa-rotate-left"></i>
           </a>
         {% endif %}
       </form>
@@ -56,20 +98,26 @@
     <div class="grid grid-cols-1 gap-4">
       {% for pedido in pedidos %}
       <div class="bg-white border border-gray-100 rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5 transition-all hover:shadow-md border-l-4 
-        {% if pedido.estado.nombre == 'pendiente' %} border-l-amber-400 
+        {% if pedido.estado.nombre == 'pendiente_pago' %} border-l-amber-300
+        {% elif pedido.estado.nombre == 'pendiente_validacion' %} border-l-orange-500
+        {% elif pedido.estado.nombre == 'pagado' %} border-l-teal-500
         {% elif pedido.estado.nombre == 'preparando' %} border-l-blue-500 
         {% elif pedido.estado.nombre == 'listo' %} border-l-emi-gold 
         {% elif pedido.estado.nombre == 'entregado' %} border-l-emerald-500 
-        {% else %} border-l-gray-200 {% endif %}">
+        {% else %} border-l-red-500 {% endif %}">
         
         <div class="space-y-2">
           <div class="flex items-center gap-3">
             <span class="font-black text-sm text-emi-900 tracking-tight">ORD-{{ pedido.id }}</span>
             <span class="px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border
-              {% if pedido.estado.nombre == 'entregado' %} bg-emerald-50 text-emerald-700 border-emerald-100
+              {% if pedido.estado.nombre == 'pendiente_pago' %} bg-amber-50 text-amber-700 border-amber-200
+              {% elif pedido.estado.nombre == 'pendiente_validacion' %} bg-orange-50 text-orange-700 border-orange-200
+              {% elif pedido.estado.nombre == 'pagado' %} bg-teal-50 text-teal-700 border-teal-200
               {% elif pedido.estado.nombre == 'preparando' %} bg-blue-50 text-blue-700 border-blue-100
-              {% else %} bg-amber-50 text-amber-700 border-amber-100 {% endif %}">
-              {{ pedido.estado.nombre }}
+              {% elif pedido.estado.nombre == 'listo' %} bg-amber-100 text-amber-800 border-amber-300 animate-pulse
+              {% elif pedido.estado.nombre == 'entregado' %} bg-emerald-50 text-emerald-700 border-emerald-100
+              {% else %} bg-red-50 text-red-700 border-red-200 {% endif %}">
+              {{ pedido.estado.display_nombre }}
             </span>
           </div>
           
@@ -95,8 +143,14 @@
           </div>
 
           <!-- Acciones Dinámicas de Estado -->
-          <div class="flex gap-2">
-            {% if pedido.estado.nombre == 'pagado' %}
+          <div class="flex flex-wrap items-center gap-2">
+            {% if pedido.estado.nombre == 'pendiente_validacion' %}
+              {% if pedido.transaccion.comprobantes.first %}
+                <button onclick="abrirModalValidacion('{{ pedido.id }}', '{{ pedido.codigo_pedido }}', '{{ pedido.transaccion.comprobantes.first.imagen.url }}', '{{ pedido.total }}', '{{ pedido.transaccion.id }}')" class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-4 py-2 rounded-xl text-[10px] transition-all shadow-sm flex items-center gap-1.5">
+                  <i class="fa-solid fa-receipt"></i> VALIDAR PAGO
+                </button>
+              {% endif %}
+            {% elif pedido.estado.nombre == 'pagado' %}
               <button onclick="gestionarPedido({{ pedido.id }}, 'preparando')" class="bg-emi-600 hover:bg-emi-800 text-white font-bold px-4 py-2 rounded-xl text-[10px] transition-all shadow-sm flex items-center gap-1.5">
                 <i class="fa-solid fa-kitchen-set"></i> PREPARAR
               </button>
@@ -109,7 +163,14 @@
                 <i class="fa-solid fa-circle-check"></i> ENTREGAR
               </button>
             {% endif %}
-            <a href="#" class="p-2 text-gray-400 hover:text-emi-600 transition-colors border border-gray-100 rounded-xl" title="Ver detalle">
+
+            {% if pedido.estado.nombre != 'entregado' and pedido.estado.nombre != 'cancelado' %}
+              <button onclick="rechazarPedido({{ pedido.id }}, '{{ pedido.codigo_pedido }}')" class="bg-red-50 hover:bg-red-100 text-red-600 font-bold px-3 py-2 rounded-xl text-[10px] transition-all border border-red-200" title="Rechazar Pedido">
+                <i class="fa-solid fa-ban"></i> RECHAZAR
+              </button>
+            {% endif %}
+
+            <a href="{% url 'pedidos:detalle' pedido.id %}" class="p-2 text-gray-400 hover:text-emi-600 transition-colors border border-gray-100 rounded-xl" title="Ver detalle">
               <i class="fa-solid fa-eye"></i>
             </a>
           </div>
@@ -127,17 +188,266 @@
     </div>
   </main>
 </div>
+
+<!-- Modal de Validación de Comprobante -->
+<div id="modal-validacion" class="fixed inset-0 bg-emi-950/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+  <div class="bg-white border border-gray-100 rounded-[2rem] max-w-lg w-full overflow-hidden shadow-2xl flex flex-col">
+    <!-- Header -->
+    <div class="bg-emi-900 px-6 py-4 text-white flex justify-between items-center border-b border-emi-800">
+      <h3 class="font-display font-bold text-sm flex items-center gap-2">
+        <i class="fa-solid fa-file-invoice-dollar text-emi-gold"></i> Validar Pago del Pedido
+      </h3>
+      <button onclick="cerrarModalValidacion()" class="text-gray-400 hover:text-white text-2xl font-bold leading-none">&times;</button>
+    </div>
+    
+    <!-- Body -->
+    <div class="p-6 space-y-4 flex-grow overflow-y-auto max-h-[70vh]">
+      <div class="flex justify-between items-baseline bg-gray-50 p-3.5 rounded-2xl border border-gray-100">
+        <div>
+          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Código Pedido</span>
+          <span id="modal-codigo-pedido" class="text-sm font-black text-emi-900 font-display">ORD-XXXX</span>
+        </div>
+        <div class="text-right">
+          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Total Pedido</span>
+          <span id="modal-total-pedido" class="text-lg font-black text-emi-900 font-display">Bs. 0.00</span>
+        </div>
+      </div>
+      
+      <!-- Imagen Comprobante -->
+      <div class="space-y-1.5">
+        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Captura de Comprobante</span>
+        <div class="border border-gray-200 rounded-2xl overflow-hidden bg-slate-50 flex items-center justify-center p-2 min-h-[200px]">
+          <img id="modal-imagen-comprobante" src="#" alt="Comprobante" class="max-w-full max-h-[300px] object-contain">
+        </div>
+      </div>
+
+      <!-- Campo de notas/motivo para el rechazo -->
+      <div class="space-y-1.5">
+        <label for="modal-motivo" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Notas de Validación (Obligatorio si se rechaza)</label>
+        <textarea id="modal-motivo" rows="2" placeholder="Ej: Transferencia no recibida, monto incorrecto..." class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-xs focus:outline-none focus:border-[#2355a0] transition-colors text-gray-800 placeholder-gray-400"></textarea>
+      </div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="bg-gray-50 border-t border-gray-100 px-6 py-4 flex gap-3">
+      <button onclick="procesarComprobante('rechazar')" class="flex-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold py-3 rounded-xl text-xs uppercase tracking-wider transition-all shadow-sm">
+        Rechazar Pago
+      </button>
+      <button onclick="procesarComprobante('aprobar')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-emerald-600/10">
+        Aprobar Pago
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Custom Confirmation Modal -->
+<div id="custom-confirm-modal" class="fixed inset-0 bg-emi-950/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+  <div class="bg-white border border-gray-100 rounded-[2rem] max-w-sm w-full overflow-hidden shadow-2xl p-6 space-y-5 flex flex-col text-center">
+    <div class="mx-auto w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center text-xl shadow-inner">
+      <i class="fa-solid fa-triangle-exclamation animate-bounce"></i>
+    </div>
+    <div class="space-y-2">
+      <h3 id="confirm-title" class="font-display font-bold text-sm text-[#0f2042]">¿Estás seguro?</h3>
+      <p id="confirm-message" class="text-xs text-gray-400 leading-relaxed">Esta acción cambiará el estado de la orden.</p>
+    </div>
+    <div class="flex gap-3 pt-2">
+      <button id="confirm-cancel-btn" onclick="closeCustomConfirm(false)" class="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold py-3 rounded-xl text-xs uppercase tracking-wider transition-all border border-gray-200">
+        Cancelar
+      </button>
+      <button id="confirm-ok-btn" onclick="closeCustomConfirm(true)" class="flex-1 bg-emi-600 hover:bg-emi-800 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-emi-600/10">
+        Aceptar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Prompt Modal -->
+<div id="custom-prompt-modal" class="fixed inset-0 bg-emi-950/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+  <div class="bg-white border border-gray-100 rounded-[2rem] max-w-sm w-full overflow-hidden shadow-2xl p-6 space-y-4 flex flex-col">
+    <div class="mx-auto w-12 h-12 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center text-xl shadow-inner">
+      <i class="fa-solid fa-ban"></i>
+    </div>
+    <div class="space-y-2 text-center">
+      <h3 id="prompt-title" class="font-display font-bold text-sm text-[#0f2042]">Rechazar Pedido</h3>
+      <p id="prompt-message" class="text-xs text-gray-400 leading-relaxed">Ingresa el motivo del rechazo o cancelación de la orden.</p>
+    </div>
+    <div class="space-y-1.5">
+      <input type="text" id="prompt-input" placeholder="Motivo del rechazo..." class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-xs focus:outline-none focus:border-[#2355a0] transition-colors text-gray-800 placeholder-gray-400">
+    </div>
+    <div class="flex gap-3 pt-2">
+      <button id="prompt-cancel-btn" onclick="closeCustomPrompt(false)" class="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold py-3 rounded-xl text-xs uppercase tracking-wider transition-all border border-gray-200">
+        Cancelar
+      </button>
+      <button id="prompt-ok-btn" onclick="closeCustomPrompt(true)" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-red-600/10">
+        Rechazar
+      </button>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block js_extra %}
 <script>
-// Función para actualizar estados vía AJAX sin recargar (opcional, o usa redirección)
-function gestionarPedido(pedidoId, nuevoEstado) {
-    if(confirm(`¿Deseas cambiar el pedido a estado: ${nuevoEstado}?`)) {
-        // Aquí podrías disparar un fetch() a una vista dedicada de cambio de estado
-        // o simplemente recargar enviando el dato.
-        console.log(`Cambiando pedido ${pedidoId} a ${nuevoEstado}`);
+let currentTransaccionId = null;
+
+// PROMISE-BASED CUSTOM DIALOGS
+let confirmPromiseResolver = null;
+function showCustomConfirm(title, message) {
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-message').textContent = message;
+    const modal = document.getElementById('custom-confirm-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    return new Promise((resolve) => {
+        confirmPromiseResolver = resolve;
+    });
+}
+function closeCustomConfirm(value) {
+    const modal = document.getElementById('custom-confirm-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    if (confirmPromiseResolver) {
+        confirmPromiseResolver(value);
+        confirmPromiseResolver = null;
     }
+}
+
+let promptPromiseResolver = null;
+function showCustomPrompt(title, message, defaultValue = "") {
+    document.getElementById('prompt-title').textContent = title;
+    document.getElementById('prompt-message').textContent = message;
+    document.getElementById('prompt-input').value = defaultValue;
+    const modal = document.getElementById('custom-prompt-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    return new Promise((resolve) => {
+        promptPromiseResolver = resolve;
+    });
+}
+function closeCustomPrompt(value) {
+    const modal = document.getElementById('custom-prompt-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    if (promptPromiseResolver) {
+        const inputVal = document.getElementById('prompt-input').value;
+        promptPromiseResolver(value ? inputVal : null);
+        promptPromiseResolver = null;
+    }
+}
+
+async function gestionarPedido(pedidoId, nuevoEstado) {
+    const approved = await showCustomConfirm("Cambiar Estado", `¿Deseas cambiar el pedido a estado: ${nuevoEstado.toUpperCase()}?`);
+    if (!approved) return;
+    
+    const csrfToken = '{{ csrf_token }}';
+    
+    fetch(`/pagos/estado/${pedidoId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfToken
+        },
+        body: new URLSearchParams({ estado: nuevoEstado })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            mostrarToast(`Pedido actualizado a ${nuevoEstado} con éxito`);
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            mostrarToast(data.error || 'Error al actualizar estado', 'error');
+        }
+    })
+    .catch(() => mostrarToast('Error de conexión', 'error'));
+}
+
+async function rechazarPedido(pedidoId, codigoPedido) {
+    const motivo = await showCustomPrompt(`Rechazar Pedido ${codigoPedido}`, `Ingresa el motivo del rechazo o cancelación de la orden:`, "Cancelado por decisión del administrador");
+    if (motivo === null) return;
+    if (motivo.trim() === "") {
+        mostrarToast("Por favor ingresa un motivo válido.", "error");
+        return;
+    }
+    
+    const csrfToken = '{{ csrf_token }}';
+    
+    fetch(`/dashboard/pedidos/${pedidoId}/rechazar/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({ motivo: motivo })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            mostrarToast('Pedido cancelado/rechazado correctamente');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            mostrarToast(data.error || 'Error al cancelar pedido', 'error');
+        }
+    })
+    .catch(() => mostrarToast('Error de conexión', 'error'));
+}
+
+function abrirModalValidacion(pedidoId, codigoPedido, imagenUrl, total, transaccionId) {
+    currentTransaccionId = transaccionId;
+    document.getElementById('modal-codigo-pedido').textContent = codigoPedido;
+    document.getElementById('modal-total-pedido').textContent = `Bs. ${parseFloat(total.toString().replace(',', '.')).toFixed(2)}`;
+    document.getElementById('modal-imagen-comprobante').src = imagenUrl;
+    document.getElementById('modal-motivo').value = '';
+    
+    const modal = document.getElementById('modal-validacion');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function cerrarModalValidacion() {
+    const modal = document.getElementById('modal-validacion');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    currentTransaccionId = null;
+}
+
+async function procesarComprobante(accion) {
+    if (!currentTransaccionId) return;
+    
+    const motivo = document.getElementById('modal-motivo').value.trim();
+    if (accion === 'rechazar' && !motivo) {
+        mostrarToast('Por favor ingresa un motivo para el rechazo.', 'error');
+        return;
+    }
+    
+    const labelAccion = accion === 'aprobar' ? 'aprobar' : 'rechazar';
+    const approved = await showCustomConfirm(`${accion.toUpperCase()} Pago`, `¿Estás seguro de que deseas ${labelAccion} este comprobante de pago?`);
+    if (!approved) return;
+    
+    const csrfToken = '{{ csrf_token }}';
+    
+    fetch(`/pagos/validar/${currentTransaccionId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({ accion, motivo })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            mostrarToast(data.mensaje || `Pago procesado con éxito`);
+            cerrarModalValidacion();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            mostrarToast(data.error || 'Error al procesar pago', 'error');
+        }
+    })
+    .catch(() => mostrarToast('Error de conexión', 'error'));
 }
 </script>
 {% endblock %}

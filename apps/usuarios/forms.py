@@ -18,18 +18,15 @@ class RegistroForm(forms.ModelForm):
 
     class Meta:
         model  = Usuario
-        fields = ['nombre_completo', 'email',
-                  'codigo_estudiante', 'telefono']
+        fields = ['nombre_completo', 'email', 'telefono']
         labels = {
             'nombre_completo':   'Nombre completo',
             'email':             'Correo electrónico',
-            'codigo_estudiante': 'Código de estudiante',
             'telefono':          'Teléfono (opcional)',
         }
         widgets = {
             'nombre_completo':   forms.TextInput(attrs={'placeholder': 'Tu nombre completo'}),
             'email':             forms.EmailInput(attrs={'placeholder': 'tu@correo.com'}),
-            'codigo_estudiante': forms.TextInput(attrs={'placeholder': 'Ej: EST-2024-001'}),
             'telefono':          forms.TextInput(attrs={'placeholder': '+591 7xxxxxxx'}),
         }
 

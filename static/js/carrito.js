@@ -8,11 +8,23 @@ function mostrarToast(mensaje, tipo = 'success') {
     document.body.appendChild(wrap);
   }
   const toast = document.createElement('div');
-  toast.className = 'bg-emi-900 text-white px-5 py-3.5 rounded-xl text-xs font-bold shadow-2xl border-l-4 border-emi-gold flex items-center gap-2.5 min-w-[250px] transition-all transform translate-x-0 duration-300';
+  
+  let borderColor = 'border-emi-gold';
+  let iconClass = 'fa-solid fa-circle-check text-emi-gold';
+  
+  if (tipo === 'error') {
+    borderColor = 'border-red-500';
+    iconClass = 'fa-solid fa-circle-xmark text-red-500';
+  } else if (tipo === 'warning') {
+    borderColor = 'border-amber-500';
+    iconClass = 'fa-solid fa-triangle-exclamation text-amber-500';
+  }
+  
+  toast.className = `bg-emi-900 text-white px-5 py-3.5 rounded-xl text-xs font-bold shadow-2xl border-l-4 ${borderColor} flex items-center gap-2.5 min-w-[250px] transition-all transform translate-x-0 duration-300`;
   
   // Icon
   const icon = document.createElement('i');
-  icon.className = 'fa-solid fa-circle-check text-emi-gold text-sm';
+  icon.className = `${iconClass} text-sm`;
   toast.appendChild(icon);
   
   // Text
